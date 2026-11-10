@@ -361,6 +361,17 @@ def test_compressor_truncates_long_items() -> None:
     assert result.diff["in_progress"].truncated or result.document.in_progress
 
 
+def test_compressor_actually_truncates_long_items() -> None:
+    settings = build_settings(storage_root="storage")
+    compressor = MemoryCompressor(settings)
+    document = WorkingMemoryDocument(current_goal="g", in_progress=["y" * 900], next_action="n")
+    result = compressor.compress(document)
+    assert result.applied
+    assert result.diff["in_progress"].truncated
+    assert len(result.document.in_progress[0]) == 400
+    assert result.document.in_progress[0].endswith("…")
+
+
 def test_llm_assisted_disabled_by_default(tmp_path) -> None:
     settings = build_settings(storage_root=tmp_path / "s")
     compressor = MemoryCompressor(settings)

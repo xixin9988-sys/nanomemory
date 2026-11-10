@@ -1,4 +1,4 @@
-﻿# Local single-user deployment (spec §17).
+# Local single-user deployment (spec §17).
 #
 # The API is published on 127.0.0.1 only. Exposing it on a public interface requires
 # authentication in front of it; the app itself is not an internet-facing service.

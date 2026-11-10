@@ -207,6 +207,24 @@ def test_read_text_file_blocks_traversal(tmp_path) -> None:
     assert escaped.error_code in {"path_not_allowed", "symlink_detected"}
 
 
+def test_read_text_file_blocks_memory_storage(tmp_path) -> None:
+    storage = tmp_path / "storage"
+    session_dir = storage / "working" / "abc"
+    session_dir.mkdir(parents=True)
+    secret = session_dir / "memory.md"
+    secret.write_text("private memory", encoding="utf-8")
+    registry = build_default_registry()
+    settings = build_settings(storage_root=storage, read_tool_allowed_root=tmp_path)
+    context = ToolContext(session_id="s", settings=settings, allowed_root=tmp_path)
+
+    async def run(path: str) -> ToolResult:
+        return await registry.execute("read_text_file", {"path": path}, context)
+
+    blocked = asyncio.run(run("storage/working/abc/memory.md"))
+    assert blocked.success is False
+    assert blocked.error_code == "path_not_allowed"
+
+
 def test_tool_timeout() -> None:
     registry = ToolRegistry()
 

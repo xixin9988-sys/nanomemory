@@ -1,0 +1,23 @@
+command: C:\Users\yan\OneDrive\�ĵ�\deepseek-harness\default-workspace\NanoMemory\.venv\Scripts\python.exe -m uvicorn nanomemory.api.main:app --host 127.0.0.1 --port 53013 --workers 1 --log-level warning
+port: 53013
+
+check                                       result  detail
+----------------------------------------------------------------------------------------------------
+GET /health                                 PASS    status=ok
+GET /api/v1/memory/working                  PASS    version=1
+PUT /api/v1/memory/working                  PASS    status=200
+PUT stale expected_version                  PASS    status=409
+POST /api/v1/memory/long-term               PASS    status=200
+POST /api/v1/agent/run                      PASS    status=200 agent_status=completed
+GET /api/v1/metrics/summary                 PASS    requests=1
+POST backup without admin token             PASS    status=401 code=admin_auth_required
+POST backup with admin token                PASS    status=200
+POST backup verify                          PASS    valid=True
+POST restore with wrong confirmation        PASS    status=400
+GET /openapi.json                           PASS    status=200
+scripts/health_probe.py                     PASS    {"status_code": 200, "service_status": "ok", "degraded": false, "maintenance_mode": false, "reasons": []}
+
+checks: 13 �� failures: 0
+
+executed_at: 2026-11-10T04:45:50.7486295+00:00
+commit: 922c814

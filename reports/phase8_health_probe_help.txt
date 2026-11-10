@@ -1,0 +1,15 @@
+command: C:\Users\yan\OneDrive\文档\deepseek-harness\default-workspace\NanoMemory\.venv\Scripts\python.exe scripts/health_probe.py --help
+executed_at: 2026-11-10T04:47:28.992079+00:00
+commit: 922c814
+exit_code: 0
+----------------------------------------------------------------------
+usage: health_probe.py [-h] [--url URL] [--timeout TIMEOUT] [--allow-degraded]
+
+Probe the NanoMemory health endpoint
+
+options:
+  -h, --help         show this help message and exit
+  --url URL
+  --timeout TIMEOUT
+  --allow-degraded   Treat a degraded but reachable service as healthy (not
+                     recommended for Docker)

@@ -1,4 +1,4 @@
-﻿"""Streamlit dashboard tests using ``streamlit.testing.v1.AppTest`` (spec §22.24, §13).
+"""Streamlit dashboard tests using ``streamlit.testing.v1.AppTest`` (spec §22.24, §13).
 
 A real uvicorn server is started on an ephemeral port so the dashboard exercises the actual
 HTTP contract instead of mocks.  The dashboard must never touch storage directly; these tests

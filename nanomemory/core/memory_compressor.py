@@ -40,6 +40,11 @@ MAX_ITEM_CHARS = 400
 CRITICAL_FIELDS = ("current_goal", "next_action", "blockers", "in_progress")
 
 
+def _truncated_form(item: str) -> str:
+    """The exact string the deterministic compressor produces for an over-long item."""
+    return item[: MAX_ITEM_CHARS - 1] + "…"
+
+
 @dataclass(slots=True)
 class FieldDiff:
     """Per-field structured diff between the original and compressed document."""
@@ -148,12 +153,13 @@ class MemoryCompressor:
                 if not normalised:
                     field_diff.removed.append(item)
                     continue
+                if len(normalised) > MAX_ITEM_CHARS:
+                    field_diff.truncated.append(normalised)
+                    normalised = normalised[: MAX_ITEM_CHARS - 1] + "…"
                 if normalised not in cleaned:
                     cleaned.append(normalised)
                 else:
                     field_diff.removed.append(item)
-                if len(normalised) > MAX_ITEM_CHARS:
-                    field_diff.truncated.append(normalised)
             if len(cleaned) > limit:
                 # Keep the newest items for `completed`, the first ones elsewhere.
                 keep = cleaned[-limit:] if field_name == "completed" else cleaned[:limit]
@@ -345,7 +351,11 @@ class MemoryCompressor:
         if original.blockers and not candidate.blockers:
             warnings.append("blockers would be lost while the original had blockers")
         retained = set(candidate.in_progress) | set(candidate.completed) | set(candidate.blockers)
-        lost = [item for item in original.in_progress if item not in retained]
+        lost = [
+            item
+            for item in original.in_progress
+            if item not in retained and _truncated_form(item) not in retained
+        ]
         if lost:
             warnings.append(f"unfinished items would be lost: {len(lost)}")
         return warnings

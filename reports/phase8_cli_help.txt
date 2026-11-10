@@ -1,0 +1,13 @@
+command: C:\Users\yan\OneDrive\文档\deepseek-harness\default-workspace\NanoMemory\.venv\Scripts\python.exe scripts/init_storage.py --help
+executed_at: 2026-11-10T04:47:28.524295+00:00
+commit: 922c814
+exit_code: 0
+----------------------------------------------------------------------
+usage: init_storage.py [-h] [--root ROOT]
+
+Initialise NanoMemory storage
+
+options:
+  -h, --help   show this help message and exit
+  --root ROOT  Storage root override (default: NANOMEMORY_STORAGE_ROOT or
+               ./storage)

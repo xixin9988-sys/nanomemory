@@ -313,6 +313,20 @@ async def _read_text_file(args: ReadFileArgs, context: ToolContext) -> ToolResul
     root = context.root
     candidate = root / args.path
     resolved = ensure_no_symlink(root, candidate, label="read path")
+    # Memory storage is not readable through the generic file tool: it would expose other
+    # sessions' memory and metadata to the model outside the retrieval contract.
+    if context.settings is not None:
+        storage_root = Path(context.settings.storage_root).resolve()
+        try:
+            resolved.relative_to(storage_root)
+        except ValueError:
+            pass
+        else:
+            return ToolResult(
+                success=False,
+                error_code=ErrorCode.PATH_NOT_ALLOWED.value,
+                message="Files inside the memory storage root are not readable by this tool.",
+            )
     if resolved.suffix.lower() not in context.allowed_extensions:
         return ToolResult(
             success=False,
