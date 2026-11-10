@@ -300,6 +300,23 @@ The MCP server can also be run directly (python -m nanomemory.mcp_server) for an
 All memory content it returns is untrusted reference data, and the server instructions tell the
 model so.
 
+## Roadmap: NanoMemory 2.0
+
+The 0.1.0 release solved the safety half (transactions, locks, recovery, quarantine,
+provenance, admin controls). Measured retrieval quality is the open problem — 39 % fact recall
+on the long-history benchmark — and the 2.0 plan is built around fixing that before adding more
+features:
+
+**[docs/ARCHITECTURE_2.0.md](docs/ARCHITECTURE_2.0.md)** — module-by-module keep/refactor/new
+decisions, the measured failure taxonomy (present / outranked / lexical gap), memory model v2
+with validity and provenance, hybrid retrieval design, formation/consolidation/lifecycle spec,
+zero-key CLI/SDK defaults, migration plan and phase gates (P0 retrieval ≥ 0.75 recall, P1
+formation, P2 install experience, P3 graph, P4 production).
+
+The short version: keep the storage and safety core, replace the single keyword scorer with
+BM25 + fusion + rerank (embeddings optional), add automatic memory formation with deterministic
+admission, and make `pip install` → `nanomemory init` → first `recall()` work without a key.
+
 ## Security
 
 - Secrets are rejected before they reach storage (OpenAI/Anthropic/GitHub/AWS/PEM patterns and

@@ -2,6 +2,19 @@
 
 All notable changes to this project. Dates are ISO-8601.
 
+## [Unreleased] - 2.0 plan
+
+### Added
+
+- docs/ARCHITECTURE_2.0.md: architecture review and phased build spec. Includes the measured
+  retrieval failure taxonomy on the long-history benchmark (11 present / 9 outranked / 8 lexical
+  gap out of 28 required facts), module-level keep/refactor/new decisions, memory model v2
+  (validity, status, provenance chain), hybrid retrieval design (BM25 + RRF + rerank, optional
+  embeddings), automatic formation/consolidation/lifecycle, zero-key CLI/SDK experience,
+  migration plan, evaluation gates and a concrete first PR.
+- 
+eports/analyse_recall.py: reproducible retrieval-failure analysis.
+
 ## [0.1.0] - 2026-11-10
 
 First implementation of the NanoMemory 2.0 specification (v1.6), delivered as a local
