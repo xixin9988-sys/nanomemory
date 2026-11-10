@@ -1,10 +1,10 @@
 command: benchmarks.token_benchmark --dataset benchmarks/datasets/memory_bench_long.json --strategy all --runs 1
-executed_at: 2026-11-10T04:44:13.315704+00:00
-commit: 922c814
+executed_at: 2026-11-10T04:47:36.004887+00:00
+commit: f47caa4
 exit_code: 0
 ----------------------------------------------------------------------
 mode: mock
-run:  mock-20261110T044412Z-922c814
+run:  mock-20261110T044735Z-f47caa4
 dataset sha256: aed258ddf03b6022f8601c43c8897f41c28ca03d7ecd95eb1928832cfa9c1698
 
 strategy          tokens       pre   per query   recall  saving %
