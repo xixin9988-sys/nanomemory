@@ -40,8 +40,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/OWNER/nanomemory.git"
+    "url": "git+https://github.com/xixin9988-sys/nanomemory.git"
   },
-  "homepage": "https://github.com/OWNER/nanomemory#readme",
+  "bugs": {
+    "url": "https://github.com/xixin9988-sys/nanomemory/issues"
+  },
+  "homepage": "https://github.com/xixin9988-sys/nanomemory/tree/main/dsh-plugin#readme",
   "license": "MIT"
 }

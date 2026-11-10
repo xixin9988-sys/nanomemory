@@ -39,8 +39,8 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://example.invalid/nanomemory"
-Documentation = "https://example.invalid/nanomemory/docs"
+Homepage = "https://github.com/xixin9988-sys/nanomemory"
+Documentation = "https://github.com/xixin9988-sys/nanomemory/tree/main/docs"
 
 [tool.setuptools]
 include-package-data = true

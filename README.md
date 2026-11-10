@@ -1,5 +1,8 @@
 # NanoMemory
 
+[![repo](https://img.shields.io/badge/GitHub-xixin9988--sys%2Fnanomemory-181717?logo=github)](https://github.com/xixin9988-sys/nanomemory)
+[![license](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
+
 **A lightweight, persistent and token-efficient memory engine for AI agents.**
 
 NanoMemory is a local, file-based memory layer for LLM agents. Instead of appending the whole
