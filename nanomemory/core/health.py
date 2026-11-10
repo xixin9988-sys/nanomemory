@@ -203,13 +203,15 @@ def health_payload(
     settings: Settings, report: HealthReport, *, extra: dict[str, Any] | None = None
 ) -> dict[str, Any]:
     """Merge the report with non-sensitive budget metadata for ``/health``."""
+    from nanomemory.core.token_counter import ESTIMATOR_NAME
+
     payload = report.as_dict()
     payload.update(
         {
             "context_token_budget": settings.context_token_budget,
             "memory_token_limit": settings.memory_token_limit,
             "request_token_budget": settings.request_token_budget,
-            "token_estimator": "heuristic-char4-v1",
+            "token_estimator": ESTIMATOR_NAME,
             "usage_source_policy": "exact_when_provider_reports_usage_else_estimated",
             "session_mode": settings.session_mode,
             "worker_count": settings.worker_count,

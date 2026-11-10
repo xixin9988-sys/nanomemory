@@ -250,6 +250,53 @@ A real-API run (`NANOMEMORY_PROVIDER=openai_compatible`) produces files labelled
 and reports provider-exact token usage when the endpoint returns a usage block. Results are
 not copied into this README automatically; re-run the benchmark to refresh them.
 
+## DeepSeek Harness plugin
+
+NanoMemory ships a DSH plugin (dsh-plugin/) that mounts the stdio MCP server
+(
+anomemory/mcp_server.py) through DSH's in-box @deepseek-ai/dsh-mcp-client bridge. After
+installation the model sees seven tools named mcp__nanomemory__*.
+
+Install from a checkout:
+
+`ash
+dsh plugin --profile desktop add <path-to-repo>/dsh-plugin
+`
+
+Then point the profile entry at this checkout (profile cordis.patch.yml):
+
+`yaml
+- id: mcp-nanomemory
+  name: nanomemory-dsh-plugin
+  config:
+    pythonPath: C:/path/to/NanoMemory/.venv/Scripts/python.exe
+    projectRoot: C:/path/to/NanoMemory
+    storageRoot: C:/path/to/NanoMemory/storage
+`
+
+Restart DSH and the tools appear:
+
+| Tool | Purpose |
+| --- | --- |
+| 
+anomemory_health | status, provider mode, degraded reasons, budgets |
+| 
+anomemory_get_working | Working Memory plus memory_version |
+| 
+anomemory_update_working | version-checked update (unfinished tasks protected) |
+| 
+anomemory_add_memory | store a durable fact (secrets rejected) |
+| 
+anomemory_search_memory | keyword search over long-term memory |
+| 
+anomemory_list_episodes | append-only audit events with correction status |
+| 
+anomemory_run_agent | bounded agent loop with token/tool budgets |
+
+The MCP server can also be run directly (python -m nanomemory.mcp_server) for any MCP host.
+All memory content it returns is untrusted reference data, and the server instructions tell the
+model so.
+
 ## Security
 
 - Secrets are rejected before they reach storage (OpenAI/Anthropic/GitHub/AWS/PEM patterns and

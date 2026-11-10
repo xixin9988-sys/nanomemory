@@ -38,6 +38,10 @@ single-user MVP.
   that talks to the API only, with one-shot admin token entry.
 - Benchmark harness comparing Full History, Summary and NanoMemory with reproducible
   artifacts, dataset hashes and mock/real labelling.
+- DeepSeek Harness plugin (dsh-plugin/) plus a stdio MCP server
+  (
+anomemory/mcp_server.py): seven mcp__nanomemory__* tools covering health, Working
+  Memory (version-checked updates), long-term add/search, episodes and the bounded agent loop.
 - Dockerfile (non-root, stdlib healthcheck), docker-compose, `.env.example`, scripts,
   documentation and verification artifacts under `reports/`.
 

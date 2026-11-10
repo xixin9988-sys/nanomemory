@@ -1,4 +1,4 @@
-﻿# Python
+# Python
 __pycache__/
 *.py[cod]
 .venv/
@@ -17,6 +17,9 @@ data/
 
 # Test and benchmark scratch directories
 .tmpx/
+.mcptest/
+.piptmp/
+.uvcache/
 .piptmp/
 .pytest-tmp2/
 .uvcache/

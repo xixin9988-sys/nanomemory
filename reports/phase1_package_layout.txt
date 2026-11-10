@@ -7,8 +7,8 @@ assert 'nanomemory.core' in packages
 assert 'nanomemory.api' in packages
 print('package discovery ok')
 
-executed_at: 2026-11-10T04:47:28.101769+00:00
-commit: 922c814
+executed_at: 2026-11-10T11:19:23.950886+00:00
+commit: b0fe48d
 exit_code: 0
 ----------------------------------------------------------------------
 discovered packages: ['nanomemory', 'nanomemory.api', 'nanomemory.api.routes', 'nanomemory.core', 'nanomemory.dashboard', 'nanomemory.dashboard.components', 'nanomemory.providers']

@@ -1,0 +1,47 @@
+{
+  "name": "nanomemory-dsh-plugin",
+  "version": "0.1.0",
+  "description": "NanoMemory for DeepSeek Harness: mounts the local NanoMemory MCP server through @deepseek-ai/dsh-mcp-client, exposing Working / Long-term / Episodic memory and the bounded agent loop as mcp__nanomemory__* tools.",
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "deepseek-harness",
+    "mcp",
+    "memory",
+    "agent-memory",
+    "long-term-memory",
+    "working-memory",
+    "nanomemory"
+  ],
+  "type": "module",
+  "main": "index.mjs",
+  "exports": {
+    ".": "./index.mjs",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "index.mjs",
+    "cordis.patch.yml",
+    "README.md",
+    "LICENSE"
+  ],
+  "dsh": {
+    "manifestVersion": 1,
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "engines": {
+    "node": ">=20",
+    "dsh": ">=0.2.0"
+  },
+  "scripts": {
+    "test": "node --test test.mjs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/OWNER/nanomemory.git"
+  },
+  "homepage": "https://github.com/OWNER/nanomemory#readme",
+  "license": "MIT"
+}

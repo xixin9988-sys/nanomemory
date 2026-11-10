@@ -1,0 +1,14 @@
+﻿# nanomemory-dsh-plugin — DSH bundle patch layer
+#
+# Mounts the local NanoMemory MCP server through the in-box
+# @deepseek-ai/dsh-mcp-client bridge. After DSH starts, the model sees tools named
+# mcp__nanomemory__<tool>: health, get_working, update_working, add_memory,
+# search_memory, list_episodes, run_agent.
+#
+# Configuration lives in the profile's cordis.patch.yml (id: mcp-nanomemory), not here:
+# pythonPath / projectRoot / storageRoot / provider.
+- insert:
+    - id: mcp-nanomemory
+      name: nanomemory-dsh-plugin
+      config:
+        failOnStartupError: false
