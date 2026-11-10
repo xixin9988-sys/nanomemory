@@ -1,7 +1,7 @@
-# Final delivery report
+﻿# Final delivery report
 
 - Project root: `NanoMemory/` (inside this workspace)
-- Commit: `f47caa4` (`main`)
+- Code commit: `f3976bc` (`main`); benchmark artifacts were produced at `f47caa4`
 - Product version: `0.1.0` — **Local single-user MVP**
 - Environment: Windows, Python 3.12.15 (venv), FastAPI 0.162, Pydantic 2.14, Streamlit 1.67
 - Verification artifacts: [`reports/`](.) (JUnit XML, coverage XML, command output)
