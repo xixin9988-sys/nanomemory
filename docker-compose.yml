@@ -1,0 +1,47 @@
+﻿# Local single-user deployment (spec §17).
+#
+# The API is published on 127.0.0.1 only. Exposing it on a public interface requires
+# authentication in front of it; the app itself is not an internet-facing service.
+services:
+  nanomemory-api:
+    build: .
+    image: nanomemory:0.1.0
+    container_name: nanomemory-api
+    ports:
+      - "127.0.0.1:8000:8000"
+    environment:
+      NANOMEMORY_STORAGE_ROOT: /data
+      NANOMEMORY_PROVIDER: ${NANOMEMORY_PROVIDER:-mock}
+      NANOMEMORY_API_KEY: ${NANOMEMORY_API_KEY:-}
+      NANOMEMORY_BASE_URL: ${NANOMEMORY_BASE_URL:-}
+      NANOMEMORY_MODEL: ${NANOMEMORY_MODEL:-mock-echo}
+      NANOMEMORY_ADMIN_TOKEN: ${NANOMEMORY_ADMIN_TOKEN:-}
+      NANOMEMORY_LOG_FORMAT: json
+      NANOMEMORY_ENVIRONMENT: production
+      NANOMEMORY_WORKER_COUNT: "1"
+    volumes:
+      - nanomemory-data:/data
+    healthcheck:
+      test: ["CMD", "python", "scripts/health_probe.py", "--url", "http://127.0.0.1:8000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    restart: unless-stopped
+
+  nanomemory-dashboard:
+    profiles: ["dashboard"]
+    image: nanomemory:0.1.0
+    container_name: nanomemory-dashboard
+    depends_on:
+      nanomemory-api:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:8501:8501"
+    environment:
+      NANOMEMORY_API_URL: http://nanomemory-api:8000
+    command: ["python", "scripts/run_dashboard.py", "--api-url", "http://nanomemory-api:8000", "--host", "0.0.0.0", "--port", "8501"]
+    restart: unless-stopped
+
+volumes:
+  nanomemory-data:

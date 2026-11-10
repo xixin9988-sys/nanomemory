@@ -1,0 +1,4 @@
+strategy,cases,prompt_tokens,completion_tokens,total_tokens,preprocessing_tokens,total_with_preprocessing,fact_recall_rate,task_success_mean,latency_ms,saving_rate_pct
+full_history,10,0,0,4110,0,4110,1.0,,0.0,0.0
+summary,10,0,0,2158,1720,3878,0.8571,,0.0,47.49
+nanomemory,10,0,0,10532,564,11096,0.3929,,0.01,-156.25

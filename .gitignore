@@ -1,0 +1,41 @@
+﻿# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+build/
+dist/
+
+# Environment / secrets
+.env
+.env.local
+
+# Runtime storage (contains user memory; never commit)
+storage/
+data/
+
+# Test and benchmark scratch directories
+.tmpx/
+.pytest-tmp/
+.pytest_cache/
+.pt-run1/
+.probe-mode/
+.bench-work/
+.bw/
+.dbg*/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+
+# Reports: JUnit XML / coverage XML are intentional artifacts and ARE committed.
+# Raw benchmark work directories are not.
+benchmarks/results/*/work/
+
+# Editors / OS
+.idea/
+.vscode/
+*.swp
+Thumbs.db
+.DS_Store
