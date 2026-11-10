@@ -17,6 +17,13 @@ data/
 
 # Test and benchmark scratch directories
 .tmpx/
+.piptmp/
+.pytest-tmp2/
+.uvcache/
+.pyshim/
+t/
+dist/
+build/
 .pytest-tmp/
 .pytest_cache/
 .pt-run1/
