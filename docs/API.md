@@ -157,3 +157,26 @@ curl -s -X POST http://127.0.0.1:8000/api/v1/memory/backup \
   -H "Authorization: Bearer $NANOMEMORY_ADMIN_TOKEN" \
   -H "Content-Type: application/json" -d '{"label":"manual"}'
 ```
+
+## Cognitive memory endpoints (0.2.0)
+
+| Method | Path | Purpose |
+| --- | --- | --- |
+| POST | `/api/v1/memory/remember` | run the formation pipeline over free text |
+| GET | `/api/v1/memory/recall?q=&limit=&user_id=&memory_type=` | hybrid retrieval with per-signal scores |
+| GET | `/api/v1/memory/{id}/explain` | provenance, supersede chain and audit trail |
+| POST | `/api/v1/memory/{id}/confirm` | promote `pending_confirmation` to `active` |
+| POST | `/api/v1/memory/{id}/reject` | archive a pending memory |
+| POST | `/api/v1/memory/lifecycle/run?apply=false` | evaluate retention (dry-run by default) |
+
+`recall` returns `intent`, `insufficient_context`, `fallback_reason` and one entry per selected
+memory with `score`, `reason` and `signals` (`keyword`, `semantic`, `relation`, `recency`,
+`importance`).
+
+```bash
+curl -s -X POST http://127.0.0.1:8000/api/v1/memory/remember \
+  -H "Content-Type: application/json" \
+  -d '{"content":"I prefer Python for tooling.","user_id":"user_001"}'
+
+curl -s "http://127.0.0.1:8000/api/v1/memory/recall?q=what%20language%20do%20I%20prefer&user_id=user_001"
+```

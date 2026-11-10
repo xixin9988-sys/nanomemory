@@ -1,0 +1,76 @@
+{
+  "schema_version": 2,
+  "updated_at": "2026-11-10T12:17:40.722993+00:00",
+  "records": [
+    {
+      "id": "mem-5b290eadf9694658",
+      "content": "I prefer Python for tooling.",
+      "category": "general",
+      "created_at": "2026-11-10T12:17:40.691530+00:00",
+      "updated_at": "2026-11-10T12:17:40.691530+00:00",
+      "source": "user",
+      "source_type": "user",
+      "confidence": "high",
+      "importance": 4,
+      "tags": [
+        "preference"
+      ],
+      "status": "active",
+      "trust_level": "unknown",
+      "version": 1,
+      "schema_version": 2,
+      "related_ids": [],
+      "review_reason": null,
+      "memory_type": "preference",
+      "user_id": "local",
+      "valid_from": "2026-11-10T12:17:40.691530+00:00",
+      "valid_until": null,
+      "provenance": {
+        "source_kind": "user",
+        "source_ref": "user",
+        "derived_from": [],
+        "created_by": "formation",
+        "note": "extracted by deterministic formation rules"
+      },
+      "supersedes": [],
+      "superseded_by": null,
+      "last_recalled_at": "2026-11-10T12:17:40.722993+00:00",
+      "recall_count": 1
+    },
+    {
+      "id": "mem-d7cb0483d0ed436e",
+      "content": "The deployment target is Windows 11.",
+      "category": "general",
+      "created_at": "2026-11-10T12:17:40.703653+00:00",
+      "updated_at": "2026-11-10T12:17:40.703653+00:00",
+      "source": "user",
+      "source_type": "user",
+      "confidence": "high",
+      "importance": 3,
+      "tags": [
+        "fact"
+      ],
+      "status": "active",
+      "trust_level": "unknown",
+      "version": 1,
+      "schema_version": 2,
+      "related_ids": [],
+      "review_reason": null,
+      "memory_type": "fact",
+      "user_id": "local",
+      "valid_from": "2026-11-10T12:17:40.701598+00:00",
+      "valid_until": null,
+      "provenance": {
+        "source_kind": "user",
+        "source_ref": "user",
+        "derived_from": [],
+        "created_by": "formation",
+        "note": "extracted by deterministic formation rules"
+      },
+      "supersedes": [],
+      "superseded_by": null,
+      "last_recalled_at": null,
+      "recall_count": 0
+    }
+  ]
+}

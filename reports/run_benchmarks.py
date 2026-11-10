@@ -65,6 +65,10 @@ def main() -> int:
         "phase7_task_benchmark.txt",
         ["benchmarks.task_benchmark", "--dataset", dataset, "--strategy", "all", "--runs", "1"],
     )
+    failures += run(
+        "phase10_retrieval_benchmark.txt",
+        ["benchmarks.retrieval_benchmark", "--k", "5"],
+    )
     return 0 if failures == 0 else 1
 
 

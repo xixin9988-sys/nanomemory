@@ -2,18 +2,54 @@
 
 All notable changes to this project. Dates are ISO-8601.
 
-## [Unreleased] - 2.0 plan
+## [0.2.0] - 2026-11-10
+
+Memory-quality and cognitive-memory release. Storage, transactions, locks and recovery are
+unchanged; the cognitive layer sits on top of them.
 
 ### Added
 
-- docs/ARCHITECTURE_2.0.md: architecture review and phased build spec. Includes the measured
-  retrieval failure taxonomy on the long-history benchmark (11 present / 9 outranked / 8 lexical
-  gap out of 28 required facts), module-level keep/refactor/new decisions, memory model v2
-  (validity, status, provenance chain), hybrid retrieval design (BM25 + RRF + rerank, optional
-  embeddings), automatic formation/consolidation/lifecycle, zero-key CLI/SDK experience,
-  migration plan, evaluation gates and a concrete first PR.
-- 
-eports/analyse_recall.py: reproducible retrieval-failure analysis.
+- **Memory model v2**: `memory_type` (`fact / preference / event / procedure / relationship /
+  autobiographical`), nested `provenance` (`source_kind`, `source_ref`, `derived_from`,
+  `created_by`, `note`), `valid_from` / `valid_until`, supersede chain (`supersedes`,
+  `superseded_by`), recall utility (`recall_count`, `last_recalled_at`) and the statuses
+  `ACTIVE / SUPERSEDED / CONFLICT / ARCHIVED / PENDING_CONFIRMATION`.
+  `knowledge.json` migrates v1 → v2 automatically through the existing migration journal.
+- **Automatic memory formation** (`core/memory_formation.py`): deterministic extraction and
+  classification, per-type admission rules, dedupe/conflict detection, supersede on newer
+  explicit statements, and audit events. A model-derived memory is stored as
+  `pending_confirmation` and never presented as a user-stated fact.
+- **Hybrid retrieval v2** (`core/memory_retriever.py`): BM25 + character-trigram semantic +
+  one-hop relation expansion + query-intent weights (`preference / project_state /
+  decision_history / timeline / general`) + reranking, with per-signal explanation and an
+  `insufficient_context` fallback based on content signal floors.
+- **Lifecycle** (`core/lifecycle.py`): retention = importance × utility × recency × confidence;
+  archives instead of deleting; stable preferences are protected.
+- **Explainability**: `explain(memory_id)` returns provenance, supersede chain and the audit
+  events that created or replaced the memory.
+- **SDK**: `from nanomemory import Memory` with `remember / recall / forget / confirm / reject /
+  explain / lifecycle / status`; lite mode needs no API key.
+- **CLI**: `nanomemory init|start|status|remember|recall|explain|lifecycle|doctor`, exported as
+  a console script and available as `python -m nanomemory`.
+- **REST**: `POST /api/v1/memory/remember`, `GET /api/v1/memory/recall`,
+  `GET /api/v1/memory/{id}/explain`, `POST /api/v1/memory/{id}/confirm|reject`,
+  `POST /api/v1/memory/lifecycle/run`.
+- **Retrieval benchmark** (`benchmarks/retrieval_benchmark.py`): Fact Recall@K, Precision@K,
+  Provenance Coverage, temporal-update accuracy and conflict-detection accuracy.
+
+### Changed
+
+- Fact recall on the long-history benchmark: **0.39 → 0.86** at the same 67 % token saving
+  (mock mode, same dataset). Token use stayed flat; the gain came from retrieval, not from
+  loading more memory.
+- `README.md` restructured around the 2.0 product surface; `docs/NANOMEMORY_2.0.md` records the
+  architecture and roadmap.
+
+### Fixed
+
+- Health payload now reports the real token estimator name instead of a stale hard-coded one.
+- Generated artifacts (coverage, JUnit, benchmark metadata, report headers) no longer embed
+  machine-specific absolute paths or the local hostname.
 
 ## [0.1.0] - 2026-11-10
 

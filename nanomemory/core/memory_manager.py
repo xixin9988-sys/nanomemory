@@ -31,17 +31,21 @@ from nanomemory.core.context_builder import ContextBuilder
 from nanomemory.core.episodic_memory import EpisodicMemoryStore, EpisodicQuery, EpisodicResult
 from nanomemory.core.errors import ErrorCode, NanoMemoryError
 from nanomemory.core.health import HealthReport, HealthService, health_payload
+from nanomemory.core.lifecycle import run_lifecycle
 from nanomemory.core.locks import LockManager
 from nanomemory.core.logging_config import configure_logging, get_logger
 from nanomemory.core.long_term_memory import LongTermMemoryStore
 from nanomemory.core.memory_compressor import CompressionResult, MemoryCompressor
+from nanomemory.core.memory_formation import MemoryFormation
 from nanomemory.core.memory_models import (
     Episode,
     LongTermRecord,
+    MemoryType,
     QuarantineAck,
     QuarantineRecord,
     RetrievalResult,
     SessionMeta,
+    SourceKind,
     UsageRecord,
     WorkingMemorySnapshot,
 )
@@ -119,6 +123,7 @@ class MemoryManager:
         )
         self.context_builder = ContextBuilder(self.settings, counter=self.counter)
         self.compressor = MemoryCompressor(self.settings, counter=self.counter)
+        self.formation = MemoryFormation(self.settings, self.long_term)
 
         self.provider_error: str | None = None
         if provider is not None:
@@ -370,6 +375,68 @@ class MemoryManager:
     def retrieve_long_term_memory(self, query: str, *, limit: int = 20) -> list[LongTermRecord]:
         self.check_maintenance()
         return self.long_term.search(query, limit=limit)
+
+    # ------------------------------------------------------------------ cognitive 2.0
+    def remember(
+        self,
+        text: str,
+        *,
+        user_id: str = "local",
+        source_kind: SourceKind = SourceKind.USER,
+        confirm: bool | None = None,
+        session_id: str = "system",
+    ) -> dict[str, Any]:
+        """Run the automatic memory formation pipeline over free text."""
+        self.check_maintenance()
+        return self.formation.form(
+            text,
+            user_id=user_id,
+            source_kind=source_kind,
+            source_ref=source_kind.value,
+            session_id=session_id,
+            confirm=confirm,
+        )
+
+    def recall(
+        self,
+        query: str,
+        *,
+        session_id: str,
+        user_id: str | None = None,
+        token_budget: int | None = None,
+        memory_type: MemoryType | None = None,
+    ) -> RetrievalResult:
+        """Hybrid retrieval with relation expansion and a low-confidence fallback."""
+        self.check_maintenance()
+        result = self.retriever.retrieve(
+            query,
+            session_id=session_id,
+            token_budget=token_budget,
+            user_id=user_id,
+            memory_type=memory_type,
+        )
+        recalled = [item.id for item in result.selected if item.kind == "long_term"]
+        if recalled:
+            self.long_term.touch_recalled(recalled)
+        return result
+
+    def confirm_memory(self, memory_id: str, *, session_id: str = "system") -> LongTermRecord:
+        self.check_maintenance()
+        return self.long_term.confirm(memory_id, session_id=session_id)
+
+    def reject_memory(
+        self, memory_id: str, *, reason: str = "rejected by operator", session_id: str = "system"
+    ) -> LongTermRecord:
+        self.check_maintenance()
+        return self.long_term.reject(memory_id, reason=reason, session_id=session_id)
+
+    def explain_memory(self, memory_id: str) -> dict[str, Any]:
+        self.check_maintenance()
+        return self.long_term.explain_data(memory_id)
+
+    def run_lifecycle(self, *, dry_run: bool = True) -> dict[str, Any]:
+        self.check_maintenance()
+        return run_lifecycle(self.long_term, dry_run=dry_run)
 
     def retrieve_for_context(
         self, task: str, session_id: str, *, token_budget: int | None = None

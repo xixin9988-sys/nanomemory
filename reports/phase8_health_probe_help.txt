@@ -1,6 +1,6 @@
 command: python scripts/health_probe.py --help
-executed_at: 2026-11-10T11:40:38.941493+00:00
-commit: 07eff76
+executed_at: 2026-11-10T12:26:30.178627+00:00
+commit: 802e32d
 exit_code: 0
 ----------------------------------------------------------------------
 usage: health_probe.py [-h] [--url URL] [--timeout TIMEOUT] [--allow-degraded]

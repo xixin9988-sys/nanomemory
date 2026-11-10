@@ -25,7 +25,15 @@ from fastapi.responses import RedirectResponse
 from nanomemory import __version__
 from nanomemory.api.deps import RATE_LIMIT_HEADER, RateLimiter
 from nanomemory.api.errors import REQUEST_ID_HEADER, error_response, install_error_handlers
-from nanomemory.api.routes import admin, agent, health, memory, metrics, sessions
+from nanomemory.api.routes import (
+    admin,
+    agent,
+    cognitive,
+    health,
+    memory,
+    metrics,
+    sessions,
+)
 from nanomemory.core.config import Settings, get_settings
 from nanomemory.core.errors import ErrorCode
 from nanomemory.core.logging_config import configure_logging, get_logger, log_event, set_request_id
@@ -179,6 +187,7 @@ def create_app(
     app.include_router(health.router)
     app.include_router(sessions.router)
     app.include_router(memory.router)
+    app.include_router(cognitive.router)
     app.include_router(agent.router)
     app.include_router(metrics.router)
     app.include_router(admin.router)

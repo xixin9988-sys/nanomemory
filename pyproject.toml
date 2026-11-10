@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "nanomemory"
-version = "0.1.0"
+version = "0.2.0"
 description = "A lightweight, persistent and token-efficient memory engine for AI agents."
 readme = "README.md"
 requires-python = ">=3.11"
@@ -37,6 +37,9 @@ dev = [
     "pytest-asyncio>=0.23",
     "ruff>=0.4",
 ]
+
+[project.scripts]
+nanomemory = "nanomemory.cli:main"
 
 [project.urls]
 Homepage = "https://github.com/xixin9988-sys/nanomemory"

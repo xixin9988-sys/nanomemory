@@ -237,3 +237,32 @@ Migration protocol (`core/migrations.py`): full lock set → durable maintenance
 durable backup → migration journal (`started`) → transform → verify → atomic replace →
 journal `completed` → clear marker. On failure the backup is restored and verified; if that
 fails the marker stays and the service remains in maintenance mode.
+
+## 7. Long-term record v2 (0.2.0)
+
+`knowledge.json` schema version **2** adds the cognitive fields. All are optional when reading
+older files: the migration fills them in without inventing semantic content.
+
+| Field | Type | Meaning |
+| --- | --- | --- |
+| `memory_type` | enum | `fact`, `preference`, `event`, `procedure`, `relationship`, `autobiographical` |
+| `user_id` | string or null | owner filter (`local` by default); not an authorization boundary |
+| `valid_from` / `valid_until` | ISO-8601 or null | validity window; `valid_until` is set when a record is superseded |
+| `provenance` | object | `source_kind` (`user/model/tool/file/composed/import/unknown`), `source_ref`, `derived_from`, `created_by`, `note` |
+| `supersedes` | list | ids replaced by this record |
+| `superseded_by` | id or null | the record that replaced this one |
+| `last_recalled_at` / `recall_count` | ISO-8601 / int | retrieval utility signals |
+
+Status values: `active`, `superseded`, `conflict`, `archived`, `needs_review`,
+`pending_confirmation`.
+
+Write rules:
+
+* `source_kind=user` may be written `active` directly,
+* `source_kind=model` becomes `pending_confirmation` unless `confirm=True`,
+* identical content becomes `conflict` (both records kept),
+* a newer explicit statement with high token overlap supersedes the older `active` record and
+  keeps it queryable through `include_superseded=true`.
+
+Migration: `plan()` yields `long_term:0->1` then `long_term:1->2`; each step is journalled and
+verified, and a crash is recovered by the existing maintenance-marker path.

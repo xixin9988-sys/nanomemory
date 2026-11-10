@@ -1,6 +1,6 @@
 {
   "name": "nanomemory-dsh-plugin",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "NanoMemory for DeepSeek Harness: mounts the local NanoMemory MCP server through @deepseek-ai/dsh-mcp-client, exposing Working / Long-term / Episodic memory and the bounded agent loop as mcp__nanomemory__* tools.",
   "keywords": [
     "dsh",

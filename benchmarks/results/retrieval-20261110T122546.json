@@ -1,0 +1,73 @@
+{
+  "k": 5,
+  "records": 60,
+  "cases": 10,
+  "fact_recall_at_k": 0.6071,
+  "legacy_recall_at_k": 0.6071,
+  "precision_at_k": 0.28,
+  "provenance_coverage": 1.0,
+  "temporal_update_accuracy": 1.0,
+  "conflict_detection_accuracy": 1.0,
+  "per_case": [
+    {
+      "id": "case-001",
+      "required": 2,
+      "hit": 2,
+      "recall_at_k": 1.0
+    },
+    {
+      "id": "case-002",
+      "required": 3,
+      "hit": 2,
+      "recall_at_k": 0.6667
+    },
+    {
+      "id": "case-003",
+      "required": 3,
+      "hit": 2,
+      "recall_at_k": 0.6667
+    },
+    {
+      "id": "case-004",
+      "required": 3,
+      "hit": 2,
+      "recall_at_k": 0.6667
+    },
+    {
+      "id": "case-005",
+      "required": 3,
+      "hit": 2,
+      "recall_at_k": 0.6667
+    },
+    {
+      "id": "case-006",
+      "required": 3,
+      "hit": 1,
+      "recall_at_k": 0.3333
+    },
+    {
+      "id": "case-007",
+      "required": 3,
+      "hit": 1,
+      "recall_at_k": 0.3333
+    },
+    {
+      "id": "case-008",
+      "required": 3,
+      "hit": 3,
+      "recall_at_k": 1.0
+    },
+    {
+      "id": "case-009",
+      "required": 3,
+      "hit": 0,
+      "recall_at_k": 0.0
+    },
+    {
+      "id": "case-010",
+      "required": 2,
+      "hit": 2,
+      "recall_at_k": 1.0
+    }
+  ]
+}

@@ -49,3 +49,4 @@ benchmarks/results/*/work/
 *.swp
 Thumbs.db
 .DS_Store
+.tmp/

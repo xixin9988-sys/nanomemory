@@ -38,7 +38,7 @@ def test_add_and_get(long_term_store) -> None:
     fetched = long_term_store.get(record.id)
     assert fetched.content == record.content
     assert fetched.version == 1
-    assert fetched.schema_version == 1
+    assert fetched.schema_version == 2
 
 
 def test_secret_rejected_on_add(long_term_store) -> None:

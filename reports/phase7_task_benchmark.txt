@@ -1,6 +1,6 @@
 command: python benchmarks.task_benchmark --dataset benchmarks/datasets/memory_bench_long.json --strategy all --runs 1
-executed_at: 2026-11-10T11:39:11.149802+00:00
-commit: 07eff76
+executed_at: 2026-11-10T12:25:45.346334+00:00
+commit: 802e32d
 exit_code: 0
 ----------------------------------------------------------------------
 mode: mock
@@ -10,6 +10,6 @@ strategy        fact recall  forbidden  task success
 ----------------------------------------------------
 full_history            1.0          0          None
 summary              0.8571          0          None
-nanomemory           0.3929          0          None
+nanomemory           0.8571          0          None
 
 task_success is null because no human label file was provided (use --labels labels.json).

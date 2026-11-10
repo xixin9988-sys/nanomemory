@@ -1,6 +1,6 @@
 command: python scripts/init_storage.py --help
-executed_at: 2026-11-10T11:40:38.608109+00:00
-commit: 07eff76
+executed_at: 2026-11-10T12:26:29.701758+00:00
+commit: 802e32d
 exit_code: 0
 ----------------------------------------------------------------------
 usage: init_storage.py [-h] [--root ROOT]

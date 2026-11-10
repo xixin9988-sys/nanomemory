@@ -168,34 +168,43 @@ Everything above is additive; no existing module is deleted in 2.0.
 class MemoryRecord(BaseModel):
     id: str
     content: str
-    memory_type: Literal["fact","preference","decision","project_state","event",
-                         "procedure","relation","profile"]      # new
-    scope: str                     # user / project / session / global
-    source: str                    # human-readable origin
-    source_type: SourceType        # user | model | tool | import | consolidation
-    confidence: Confidence         # clamped by source rules (unchanged)
-    importance: int                # 1..5, clamped (unchanged)
+    memory_type: Literal[
+        "fact",
+        "preference",
+        "decision",
+        "project_state",
+        "event",
+        "procedure",
+        "relation",
+        "profile",
+    ]  # new
+    scope: str  # user / project / session / global
+    source: str  # human-readable origin
+    source_type: SourceType  # user | model | tool | import | consolidation
+    confidence: Confidence  # clamped by source rules (unchanged)
+    importance: int  # 1..5, clamped (unchanged)
     created_at: str
     updated_at: str
-    valid_from: str | None         # NEW: when the fact became true
-    valid_until: str | None        # NEW: when it stopped being true
-    status: MemoryStatus           # ACTIVE|SUPERSEDED|CONFLICT|ARCHIVED|PENDING_CONFIRMATION
-    superseded_by: str | None      # NEW: id of the record that replaced it
+    valid_from: str | None  # NEW: when the fact became true
+    valid_until: str | None  # NEW: when it stopped being true
+    status: MemoryStatus  # ACTIVE|SUPERSEDED|CONFLICT|ARCHIVED|PENDING_CONFIRMATION
+    superseded_by: str | None  # NEW: id of the record that replaced it
     related_ids: list[str]
-    entities: list[str]            # NEW: entity ids referenced
+    entities: list[str]  # NEW: entity ids referenced
     tags: list[str]
-    provenance: Provenance         # NEW: structured chain, see below
+    provenance: Provenance  # NEW: structured chain, see below
     version: int
     schema_version: int = 2
 
+
 class Provenance(BaseModel):
-    origin_event_id: str           # episodic event that triggered formation
-    evidence: list[Evidence]       # quoted spans with offsets
-    formed_by: Literal["rule","llm","consolidation","user"]
+    origin_event_id: str  # episodic event that triggered formation
+    evidence: list[Evidence]  # quoted spans with offsets
+    formed_by: Literal["rule", "llm", "consolidation", "user"]
     model: str | None
-    rule: str | None               # rule id when deterministic
-    derived_from: list[str]        # parent memory ids for merges
-    review: Literal["auto","needs_review","confirmed"] = "auto"
+    rule: str | None  # rule id when deterministic
+    derived_from: list[str]  # parent memory ids for merges
+    review: Literal["auto", "needs_review", "confirmed"] = "auto"
 ```
 
 Rules that must be enforced in code, not prompts:
@@ -332,7 +341,7 @@ nanomemory doctor               # self-check: storage, locks, schema, index, pro
 ```python
 from nanomemory import Memory
 
-memory = Memory()                       # auto-init, local files, no keys
+memory = Memory()  # auto-init, local files, no keys
 memory.remember("I prefer Python.", user_id="u1", source="chat")
 hits = memory.recall("Which language do I prefer?", user_id="u1", k=5)
 memory.explain(hits[0].id)

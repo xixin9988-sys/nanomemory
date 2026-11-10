@@ -15,6 +15,7 @@ Rules from the specification that are enforced here:
 
 from __future__ import annotations
 
+import re
 import uuid
 from collections.abc import Callable
 from typing import Any
@@ -31,6 +32,8 @@ from nanomemory.core.memory_models import (
     LongTermRecord,
     LongTermStore,
     MemoryStatus,
+    MemoryType,
+    SourceKind,
     SourceType,
     TrustLevel,
     utc_now_iso,
@@ -39,6 +42,18 @@ from nanomemory.core.memory_validator import MemoryValidator
 from nanomemory.core.paths import ensure_dir
 
 AuditFn = Callable[..., None]
+
+_TOKEN_RE = re.compile(r"[A-Za-z0-9_]{2,}")
+
+
+def _token_set(text: str) -> set[str]:
+    return {token.lower() for token in _TOKEN_RE.findall(text)}
+
+
+def _jaccard(left: set[str], right: set[str]) -> float:
+    if not left or not right:
+        return 0.0
+    return len(left & right) / len(left | right)
 
 
 class LongTermMemoryStore:
@@ -116,13 +131,20 @@ class LongTermMemoryStore:
         payload: dict[str, Any],
         *,
         session_id: str = "system",
+        confirm: bool | None = None,
     ) -> LongTermRecord:
-        """Add a record after validation, conflict checks and capacity checks."""
+        """Add a record after validation, conflict checks and capacity checks.
+
+        ``confirm`` controls the write rule for model-derived memories: without an explicit
+        ``True`` they are stored as ``pending_confirmation`` instead of being presented as
+        user-stated facts (spec: automatic extraction is not automatic belief).
+        """
         with self.locks.acquire([self._resource], operation="long_term_add"):
             store = self._load()
             payload = dict(payload)
             if not payload.get("id") or payload.get("id") == "auto":
                 payload["id"] = f"mem-{uuid.uuid4().hex[:16]}"
+            payload.setdefault("memory_type", MemoryType.FACT.value)
             outcome = self.validator.validate_long_term_record(payload)
             record: LongTermRecord = outcome.value
             if not record.id or record.id == "auto":
@@ -146,13 +168,39 @@ class LongTermMemoryStore:
                     },
                 )
 
-            conflict, related = self._detect_conflicts(store, record)
-            if conflict:
+            if (
+                record.provenance.source_kind is SourceKind.MODEL
+                and confirm is not True
+                and record.status is MemoryStatus.ACTIVE
+            ):
+                record = record.model_copy(
+                    update={
+                        "status": MemoryStatus.PENDING_CONFIRMATION,
+                        "review_reason": "model-derived memory requires confirmation",
+                    }
+                )
+
+            duplicate, related, supersede_ids = self._detect_conflicts(store, record)
+            if duplicate:
                 record = record.model_copy(
                     update={
                         "status": MemoryStatus.CONFLICT,
                         "related_ids": related,
                         "review_reason": "content duplicate under a different id",
+                    }
+                )
+            elif supersede_ids and record.provenance.source_kind in {
+                SourceKind.USER,
+                SourceKind.TOOL,
+                SourceKind.FILE,
+                SourceKind.IMPORT,
+            }:
+                self._supersede(store, supersede_ids, record.id)
+                record = record.model_copy(
+                    update={
+                        "supersedes": supersede_ids,
+                        "related_ids": related,
+                        "review_reason": "supersedes older memories with overlapping content",
                     }
                 )
             elif related:
@@ -170,9 +218,137 @@ class LongTermMemoryStore:
                 session_id=session_id,
                 memory_id=record.id,
                 status=record.status.value,
+                memory_type=record.memory_type.value,
+                superseded=supersede_ids,
                 secret_hits=outcome.secret_hits,
             )
             return record.model_copy(deep=True)
+
+    def _supersede(self, store: LongTermStore, ids: list[str], new_id: str) -> None:
+        """Mark older records superseded by ``new_id``; history is retained."""
+        now = utc_now_iso()
+        for index, existing in enumerate(store.records):
+            if existing.id not in ids:
+                continue
+            store.records[index] = existing.model_copy(
+                update={
+                    "status": MemoryStatus.SUPERSEDED,
+                    "superseded_by": new_id,
+                    "valid_until": now,
+                    "updated_at": now,
+                    "version": existing.version + 1,
+                }
+            )
+
+    # ------------------------------------------------------------------ confirmation
+    def confirm(self, memory_id: str, *, session_id: str = "system") -> LongTermRecord:
+        """Promote a pending memory to active after an explicit confirmation."""
+        with self.locks.acquire([self._resource], operation="long_term_confirm"):
+            store = self._load()
+            index = self._index_of(store, memory_id)
+            existing = store.records[index]
+            if existing.status is not MemoryStatus.PENDING_CONFIRMATION:
+                raise NanoMemoryError(
+                    code=ErrorCode.CONFLICTING_STATE
+                    if hasattr(ErrorCode, "CONFLICTING_STATE")
+                    else ErrorCode.VALIDATION_FAILED,
+                    message="Only pending_confirmation memories can be confirmed.",
+                    details={"id": memory_id, "status": existing.status.value},
+                )
+            confirmed = existing.model_copy(
+                update={
+                    "status": MemoryStatus.ACTIVE,
+                    "review_reason": None,
+                    "updated_at": utc_now_iso(),
+                    "version": existing.version + 1,
+                }
+            )
+            store.records[index] = confirmed
+            self._save(store)
+            self._audit(
+                "memory_confirmed",
+                session_id=session_id,
+                memory_id=memory_id,
+                version=confirmed.version,
+            )
+            return confirmed.model_copy(deep=True)
+
+    def reject(
+        self, memory_id: str, *, reason: str = "rejected by operator", session_id: str = "system"
+    ) -> LongTermRecord:
+        """Archive a pending memory instead of deleting it."""
+        with self.locks.acquire([self._resource], operation="long_term_reject"):
+            store = self._load()
+            index = self._index_of(store, memory_id)
+            existing = store.records[index]
+            rejected = existing.model_copy(
+                update={
+                    "status": MemoryStatus.ARCHIVED,
+                    "review_reason": reason[:500],
+                    "updated_at": utc_now_iso(),
+                    "version": existing.version + 1,
+                }
+            )
+            store.records[index] = rejected
+            self._save(store)
+            self._audit(
+                "memory_rejected",
+                session_id=session_id,
+                memory_id=memory_id,
+                reason=reason,
+            )
+            return rejected.model_copy(deep=True)
+
+    def touch_recalled(self, memory_ids: list[str]) -> int:
+        """Record that memories were retrieved (utility signal for lifecycle decisions)."""
+        if not memory_ids:
+            return 0
+        with self.locks.acquire([self._resource], operation="long_term_touch"):
+            store = self._load()
+            now = utc_now_iso()
+            touched = 0
+            for index, existing in enumerate(store.records):
+                if existing.id in memory_ids:
+                    store.records[index] = existing.model_copy(
+                        update={
+                            "recall_count": existing.recall_count + 1,
+                            "last_recalled_at": now,
+                        }
+                    )
+                    touched += 1
+            if touched:
+                self._save(store)
+            return touched
+
+    def explain_data(self, memory_id: str) -> dict[str, Any]:
+        """Provenance + supersede chain for one memory (the audit trail lives in episodes)."""
+        record = self.get(memory_id)
+        chain: list[dict[str, Any]] = []
+        seen: set[str] = {record.id}
+        current = record
+        while current.superseded_by and current.superseded_by not in seen:
+            seen.add(current.superseded_by)
+            try:
+                current = self.get(current.superseded_by)
+            except NanoMemoryError:
+                break
+            chain.append(
+                {
+                    "id": current.id,
+                    "status": current.status.value,
+                    "version": current.version,
+                    "valid_from": current.valid_from,
+                    "valid_until": current.valid_until,
+                }
+            )
+        return {
+            "record": record.model_dump(mode="json"),
+            "provenance": record.provenance.model_dump(mode="json"),
+            "supersedes": record.supersedes,
+            "superseded_by": record.superseded_by,
+            "supersede_chain": chain,
+            "related_ids": record.related_ids,
+        }
 
     # ------------------------------------------------------------------ read
     def list_records(
@@ -181,7 +357,10 @@ class LongTermMemoryStore:
         category: str | None = None,
         tag: str | None = None,
         status: MemoryStatus | None = None,
+        memory_type: MemoryType | None = None,
+        user_id: str | None = None,
         include_archived: bool = False,
+        include_superseded: bool = False,
         limit: int = 50,
         offset: int = 0,
     ) -> list[LongTermRecord]:
@@ -193,10 +372,21 @@ class LongTermMemoryStore:
         if tag:
             normalised = tag.strip().lower()
             records = [record for record in records if normalised in record.tags]
+        if memory_type is not None:
+            records = [record for record in records if record.memory_type is memory_type]
+        if user_id is not None:
+            records = [record for record in records if record.user_id == user_id]
         if status is not None:
             records = [record for record in records if record.status is status]
-        elif not include_archived:
-            records = [record for record in records if record.status is not MemoryStatus.ARCHIVED]
+        else:
+            if not include_archived:
+                records = [
+                    record for record in records if record.status is not MemoryStatus.ARCHIVED
+                ]
+            if not include_superseded:
+                records = [
+                    record for record in records if record.status is not MemoryStatus.SUPERSEDED
+                ]
         limit = max(0, min(limit, 500))
         return [record.model_copy(deep=True) for record in records[offset : offset + limit]]
 
@@ -222,7 +412,12 @@ class LongTermMemoryStore:
             matches = [
                 record
                 for record in store.records
-                if record.status is not MemoryStatus.ARCHIVED
+                if record.status
+                not in {
+                    MemoryStatus.ARCHIVED,
+                    MemoryStatus.SUPERSEDED,
+                    MemoryStatus.PENDING_CONFIRMATION,
+                }
                 and (
                     needle in record.content.lower()
                     or needle in record.category.lower()
@@ -384,17 +579,29 @@ class LongTermMemoryStore:
 
     def _detect_conflicts(
         self, store: LongTermStore, candidate: LongTermRecord
-    ) -> tuple[bool, list[str]]:
-        """Return ``(duplicate_content, possibly_related_ids)`` conservatively."""
+    ) -> tuple[bool, list[str], list[str]]:
+        """Return ``(duplicate, related, supersede_candidates)`` conservatively."""
         normalised = " ".join(candidate.content.lower().split())
+        candidate_tokens = _token_set(candidate.content)
         related: list[str] = []
+        supersede: list[str] = []
         duplicate = False
         threshold = max(1, self.settings.long_term_tag_overlap_threshold)
         for existing in store.records:
-            if existing.status is MemoryStatus.ARCHIVED:
+            if existing.status in {MemoryStatus.ARCHIVED, MemoryStatus.SUPERSEDED}:
                 continue
             if " ".join(existing.content.lower().split()) == normalised:
                 duplicate = True
+                related.append(existing.id)
+                continue
+            similarity = _jaccard(candidate_tokens, _token_set(existing.content))
+            if (
+                existing.memory_type is candidate.memory_type
+                and existing.user_id == candidate.user_id
+                and existing.status is MemoryStatus.ACTIVE
+                and 0.55 <= similarity < 1.0
+            ):
+                supersede.append(existing.id)
                 related.append(existing.id)
                 continue
             if (
@@ -402,7 +609,7 @@ class LongTermMemoryStore:
                 and len(set(existing.tags) & set(candidate.tags)) >= threshold
             ):
                 related.append(existing.id)
-        return duplicate, related[:20]
+        return duplicate, related[:20], supersede[:20]
 
     # ------------------------------------------------------------------ statistics
     def statistics(self) -> dict[str, Any]:

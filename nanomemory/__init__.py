@@ -20,14 +20,18 @@ from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:  # pragma: no cover - typing only
     from nanomemory.core.facade import NanoMemory as NanoMemory
 
-__all__ = ["__version__", "PRODUCT_NAME", "NanoMemory"]
+__all__ = ["__version__", "PRODUCT_NAME", "Memory", "NanoMemory"]
 
 PRODUCT_NAME = "NanoMemory"
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 
 
 def __getattr__(name: str) -> Any:
-    """Lazily expose the convenience facade without importing the whole stack."""
+    """Lazily expose the SDK and convenience facade without importing the whole stack."""
+    if name == "Memory":
+        from nanomemory.sdk import Memory
+
+        return Memory
     if name == "NanoMemory":
         from nanomemory.core.facade import NanoMemory
 

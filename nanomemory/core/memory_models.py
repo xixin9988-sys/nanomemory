@@ -21,7 +21,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator, model_valida
 WORKING_SCHEMA_VERSION = 1
 WORKING_META_SCHEMA_VERSION = 1
 JOURNAL_SCHEMA_VERSION = 1
-LONG_TERM_SCHEMA_VERSION = 1
+LONG_TERM_SCHEMA_VERSION = 2
 EPISODE_SCHEMA_VERSION = 1
 QUARANTINE_SCHEMA_VERSION = 1
 BACKUP_SCHEMA_VERSION = 1
@@ -69,9 +69,46 @@ class TaskStatus(StrEnum):
 
 class MemoryStatus(StrEnum):
     ACTIVE = "active"
+    SUPERSEDED = "superseded"
     ARCHIVED = "archived"
     CONFLICT = "conflict"
     NEEDS_REVIEW = "needs_review"
+    PENDING_CONFIRMATION = "pending_confirmation"
+
+
+class MemoryType(StrEnum):
+    """Cognitive type of a long-term memory (spec: structured memory model)."""
+
+    FACT = "fact"
+    PREFERENCE = "preference"
+    EVENT = "event"
+    PROCEDURE = "procedure"
+    RELATIONSHIP = "relationship"
+    AUTOBIOGRAPHICAL = "autobiographical"
+
+
+class SourceKind(StrEnum):
+    """Where a memory came from — never claim a model inference is a user statement."""
+
+    USER = "user"
+    MODEL = "model"
+    TOOL = "tool"
+    FILE = "file"
+    COMPOSED = "composed"
+    IMPORT = "import"
+    UNKNOWN = "unknown"
+
+
+class Provenance(BaseModel):
+    """Provenance record attached to every long-term memory."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    source_kind: SourceKind = SourceKind.UNKNOWN
+    source_ref: str | None = Field(default=None, max_length=500)
+    derived_from: list[str] = Field(default_factory=list, max_length=50)
+    created_by: str = Field(default="unknown", max_length=80)
+    note: str | None = Field(default=None, max_length=500)
 
 
 class Confidence(StrEnum):
@@ -350,6 +387,16 @@ class LongTermRecord(BaseModel):
     schema_version: int = LONG_TERM_SCHEMA_VERSION
     related_ids: list[str] = Field(default_factory=list, max_length=50)
     review_reason: str | None = Field(default=None, max_length=500)
+    # ---- v2 cognitive memory model -------------------------------------------
+    memory_type: MemoryType = MemoryType.FACT
+    user_id: str | None = Field(default=None, max_length=80)
+    valid_from: str | None = Field(default=None, max_length=40)
+    valid_until: str | None = Field(default=None, max_length=40)
+    provenance: Provenance = Field(default_factory=Provenance)
+    supersedes: list[str] = Field(default_factory=list, max_length=50)
+    superseded_by: str | None = Field(default=None, max_length=80)
+    last_recalled_at: str | None = Field(default=None, max_length=40)
+    recall_count: int = Field(default=0, ge=0)
 
     @field_validator("tags")
     @classmethod
@@ -630,6 +677,9 @@ class RetrievalResult(BaseModel):
     token_budget: int = 0
     retrieval_reason: str = ""
     truncated_for_budget: bool = False
+    intent: str = "general"
+    insufficient_context: bool = False
+    fallback_reason: str | None = None
 
 
 __all__ = [
@@ -656,8 +706,11 @@ __all__ = [
     "LongTermStore",
     "MaintenanceMarker",
     "MemoryStatus",
+    "MemoryType",
     "MemoryUpdateProposal",
     "MigrationJournal",
+    "Provenance",
+    "SourceKind",
     "QuarantineAck",
     "QuarantineRecord",
     "RetrievalResult",

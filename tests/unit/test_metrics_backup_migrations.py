@@ -234,9 +234,10 @@ def test_migration_plan_and_apply(tmp_path) -> None:
     report = manager.migrate_all()
     assert report.status == "completed"
     migrated = json.loads(path.read_text(encoding="utf-8"))
-    assert migrated["schema_version"] == 1
+    assert migrated["schema_version"] == 2
     assert len(migrated["records"]) == 2
-    assert migrated["records"][1]["schema_version"] == 1
+    assert migrated["records"][1]["schema_version"] == 2
+    assert migrated["records"][1]["memory_type"] in {"fact", "preference", "procedure"}
     assert migrated["records"][1]["source_type"] == "import"
     assert not manager.maintenance_active()
     assert manager.plan() == []

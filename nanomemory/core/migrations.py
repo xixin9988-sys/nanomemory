@@ -41,7 +41,6 @@ from nanomemory.core.fsio import (
 from nanomemory.core.locks import LockManager
 from nanomemory.core.logging_config import get_logger
 from nanomemory.core.memory_models import (
-    LONG_TERM_SCHEMA_VERSION,
     SUPPORTED_SCHEMA_VERSIONS,
     MaintenanceMarker,
     MigrationJournal,
@@ -217,6 +216,15 @@ class MigrationManager:
                     description="normalise legacy knowledge.json to schema v1",
                 )
             )
+        if current < 2:
+            steps.append(
+                MigrationStep(
+                    format_name=LONG_TERM_FORMAT,
+                    from_version=max(current, 1),
+                    to_version=2,
+                    description="add cognitive fields (memory_type, provenance, validity, supersede)",
+                )
+            )
         return steps
 
     # ------------------------------------------------------------------ migrate
@@ -303,7 +311,7 @@ class MigrationManager:
         )
         self._write_journal(journal)
 
-        migrated = self._transform_long_term(payload)
+        migrated = self._transform_long_term(payload, step.to_version)
         target_bytes = (
             json.dumps(migrated, ensure_ascii=False, indent=2, sort_keys=False) + "\n"
         ).encode("utf-8")
@@ -319,8 +327,8 @@ class MigrationManager:
         journal.completed_at = utc_now_iso()
         self._write_journal(journal)
 
-    def _transform_long_term(self, payload: dict[str, Any]) -> dict[str, Any]:
-        """Normalise legacy records to schema v1; never invents semantic content."""
+    def _transform_long_term(self, payload: dict[str, Any], to_version: int) -> dict[str, Any]:
+        """Normalise legacy records to ``to_version``; never invents semantic content."""
         if not isinstance(payload, dict):
             raise NanoMemoryError(
                 code=ErrorCode.CORRUPT_DATA,
@@ -353,13 +361,58 @@ class MigrationManager:
             normalised.setdefault("trust_level", "untrusted")
             normalised.setdefault("version", 1)
             normalised.setdefault("related_ids", [])
-            normalised["schema_version"] = 1
+            if to_version >= 2:
+                self._upgrade_record_to_v2(normalised)
+            normalised["schema_version"] = to_version
             records.append(normalised)
         return {
-            "schema_version": LONG_TERM_SCHEMA_VERSION,
+            "schema_version": to_version,
             "updated_at": utc_now_iso(),
             "records": records,
         }
+
+    @staticmethod
+    def _upgrade_record_to_v2(record: dict[str, Any]) -> None:
+        """Add cognitive fields; derive type/provenance from existing metadata only."""
+        category = str(record.get("category", "")).lower()
+        if any(marker in category for marker in ("preference", "prefer", "偏好")):
+            memory_type = "preference"
+        elif any(marker in category for marker in ("procedure", "howto", "workflow", "流程")):
+            memory_type = "procedure"
+        elif any(marker in category for marker in ("relationship", "relation", "关系")):
+            memory_type = "relationship"
+        elif any(marker in category for marker in ("autobiograph", "biography", "profile")):
+            memory_type = "autobiographical"
+        else:
+            memory_type = "fact"
+        record.setdefault("memory_type", memory_type)
+        record.setdefault("user_id", None)
+        record.setdefault("valid_from", record.get("created_at"))
+        record.setdefault(
+            "valid_until", None if record.get("status") == "active" else record.get("updated_at")
+        )
+        source_type = str(record.get("source_type", "import"))
+        source_kind = {
+            "user": "user",
+            "model": "model",
+            "tool": "tool",
+            "system": "file",
+            "import": "import",
+        }.get(source_type, "unknown")
+        record.setdefault(
+            "provenance",
+            {
+                "source_kind": source_kind,
+                "source_ref": record.get("source"),
+                "derived_from": [],
+                "created_by": "migration-v1-v2",
+                "note": None,
+            },
+        )
+        record.setdefault("supersedes", [])
+        record.setdefault("superseded_by", None)
+        record.setdefault("last_recalled_at", None)
+        record.setdefault("recall_count", 0)
 
     # ------------------------------------------------------------------ recovery
     def recover_pending(self) -> MigrationReport:
