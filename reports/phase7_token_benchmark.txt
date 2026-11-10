@@ -1,10 +1,10 @@
-command: benchmarks.token_benchmark --dataset benchmarks/datasets/memory_bench_long.json --strategy all --runs 1
-executed_at: 2026-11-10T04:47:36.004887+00:00
-commit: f47caa4
+command: python benchmarks.token_benchmark --dataset benchmarks/datasets/memory_bench_long.json --strategy all --runs 1
+executed_at: 2026-11-10T11:39:10.243505+00:00
+commit: 07eff76
 exit_code: 0
 ----------------------------------------------------------------------
 mode: mock
-run:  mock-20261110T044735Z-f47caa4
+run:  mock-20261110T113909Z-07eff76
 dataset sha256: aed258ddf03b6022f8601c43c8897f41c28ca03d7ecd95eb1928832cfa9c1698
 
 strategy          tokens       pre   per query   recall  saving %
@@ -13,4 +13,4 @@ full_history       31964         0      3196.4      1.0      0.00
 summary             2158     15647       215.8   0.8571     93.25
 nanomemory         10532       564      1053.2   0.3929     67.05
 
-artifacts: C:\Users\yan\OneDrive\�ĵ�\deepseek-harness\default-workspace\NanoMemory\benchmarks\results
+artifacts: benchmarks/results/

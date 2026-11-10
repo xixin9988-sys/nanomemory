@@ -95,7 +95,18 @@ def main(argv: list[str] | None = None) -> int:
                 f"{(f'{saving:.2f}' if saving is not None else 'n/a'):>10}"
             )
         print()
-        print(f"artifacts: {RESULTS_DIR}")
+        try:
+            from pathlib import Path as _Path
+
+            rel = (
+                _Path(args.results_dir)
+                .resolve()
+                .relative_to(_Path(__file__).resolve().parents[1])
+                .as_posix()
+            )
+        except ValueError:
+            rel = args.results_dir
+        print(f"artifacts: {rel}/")
     return 0
 
 

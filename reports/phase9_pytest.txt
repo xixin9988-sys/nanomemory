@@ -1,6 +1,6 @@
-command: C:\Users\yan\OneDrive\文档\deepseek-harness\default-workspace\NanoMemory\.venv\Scripts\python.exe -m pytest -q --junitxml=reports/phase9_junit.xml --cov=nanomemory --cov-report=term-missing --cov-report=xml:reports/phase9_coverage.xml
-executed_at: 2026-11-10T11:18:45.015824+00:00
-commit: b0fe48d
+command: python -m pytest -q --junitxml=reports/phase9_junit.xml --cov=nanomemory --cov-report=term-missing --cov-report=xml:reports/phase9_coverage.xml
+executed_at: 2026-11-10T11:40:00.898670+00:00
+commit: 07eff76
 exit_code: 0
 ----------------------------------------------------------------------
 ........................................................................ [ 26%]
@@ -36,7 +36,7 @@ nanomemory\core\memory_manager.py             246     54     28      3    77%   
 nanomemory\core\memory_models.py              412      9     32      9    96%   153, 174, 181, 227, 237, 325, 327, 361, 363, 364->358
 nanomemory\core\memory_retriever.py           167     13     54     13    87%   77-78, 133->152, 142-150, 153->155, 155->157, 175, 216, 231, 285, 301, 336, 338-339, 342->344, 345
 nanomemory\core\memory_validator.py           134     14     50      8    87%   75-76, 93, 95, 104, 106, 107->101, 177-178, 206, 210, 240-243
-nanomemory\core\metrics.py                    213     30     60     13    84%   116-119, 140-141, 156-157, 168-169, 170->175, 173-174, 200, 202, 205, 207, 222, 227, 231->220, 244-245, 266, 267->269, 275->277, 287-289, 297-299, 309-310, 316
+nanomemory\core\metrics.py                    213     30     60     12    85%   116-119, 140-141, 156-157, 168-169, 170->175, 173-174, 200, 202, 205, 207, 222, 227, 231->220, 244-245, 266, 267->269, 287-289, 297-299, 309-310, 316
 nanomemory\core\migrations.py                 260     53     54     17    76%   116-117, 126-127, 140-141, 150->exit, 156-157, 163, 166-167, 187->193, 227, 244-268, 282, 313, 325, 331, 337, 369, 375-377, 381-385, 388-393, 402-410, 414, 418, 421, 427-432
 nanomemory\core\paths.py                       89     18     26      4    77%   45, 87-88, 117, 125-136, 151, 174, 179-184
 nanomemory\core\recovery.py                    80     18     16      4    75%   45->exit, 83, 86-87, 122-132, 135-137, 140, 146-153
@@ -51,10 +51,10 @@ nanomemory\providers\base.py                   73      1     14      3    95%   
 nanomemory\providers\mock_provider.py          57      3     16      3    92%   56, 80, 131
 nanomemory\providers\openai_compatible.py      72     53     24      1    21%   42-50, 65-98, 107-110, 114-145
 ---------------------------------------------------------------------------------------
-TOTAL                                        5668    950   1302    263    81%
+TOTAL                                        5668    950   1302    262    81%
 
 9 files skipped due to complete coverage.
 Coverage XML written to file reports/phase9_coverage.xml
 =========================== short test summary info ===========================
 SKIPPED [2] tests\conftest.py:187: symlink/junction creation not permitted on this platform
-271 passed, 2 skipped in 36.44s
+271 passed, 2 skipped in 35.44s

@@ -13,7 +13,7 @@ It deliberately does **not** run pnpm: the desktop app resolves bundles from
 
 Usage::
 
-    python reports/install_dsh_plugin.py --profile E:\\dsh-home\\profiles\\desktop
+    python reports/install_dsh_plugin.py --profile <DSH_PROFILE_DIR>
 """
 
 from __future__ import annotations

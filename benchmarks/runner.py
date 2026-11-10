@@ -29,6 +29,7 @@ from pathlib import Path
 from typing import Any
 
 from benchmarks.dataset import (
+    PROJECT_ROOT,
     RESULT_SCHEMA_VERSION,
     RESULTS_DIR,
     BenchmarkCase,
@@ -104,6 +105,14 @@ class CaseResult:
 
 def _now() -> str:
     return datetime.now(UTC).isoformat()
+
+
+def _relative_dataset_path(path: str) -> str:
+    """Dataset path relative to the project root: artifacts are published."""
+    try:
+        return Path(path).resolve().relative_to(PROJECT_ROOT).as_posix()
+    except ValueError:
+        return Path(path).name
 
 
 def _git_commit() -> str:
@@ -514,7 +523,7 @@ class BenchmarkRunner:
             "generated_at": started_at,
             "finished_at": _now(),
             "dataset_name": dataset.name,
-            "dataset_path": dataset.path,
+            "dataset_path": _relative_dataset_path(dataset.path),
             "dataset_sha256": dataset.sha256,
             "dataset_schema_version": dataset.schema_version,
             "result_schema_version": RESULT_SCHEMA_VERSION,

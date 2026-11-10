@@ -1,9 +1,9 @@
-﻿✔ exports the cordis identity and tool injection (1.5303ms)
-✔ builds a stdio MCP config for the python module (0.2392ms)
-✔ prepends projectRoot to an existing PYTHONPATH (0.8969ms)
-✔ falls back to environment variables (0.1298ms)
-✔ rejects an invalid server name (0.4436ms)
-✔ passes through provider and timeout overrides (0.3593ms)
+✔ exports the cordis identity and tool injection (1.4312ms)
+✔ builds a stdio MCP config for the python module (0.2869ms)
+✔ prepends projectRoot to an existing PYTHONPATH (0.8317ms)
+✔ falls back to environment variables (0.1107ms)
+✔ rejects an invalid server name (0.3563ms)
+✔ passes through provider and timeout overrides (0.2852ms)
 ℹ tests 6
 ℹ suites 0
 ℹ pass 6
@@ -11,6 +11,4 @@
 ℹ cancelled 0
 ℹ skipped 0
 ℹ todo 0
-ℹ duration_ms 9.4724
-
-commit: b0fe48d
+ℹ duration_ms 7.8026

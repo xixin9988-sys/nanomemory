@@ -71,7 +71,7 @@ def main() -> int:
         "--log-level",
         "warning",
     ]
-    print(f"command: {' '.join(command)}")
+    print(f"command: python {' '.join(command[1:])}")
     print(f"port: {port}")
     server = subprocess.Popen(  # noqa: S603 - fixed argv
         command,

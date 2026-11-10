@@ -1,6 +1,6 @@
-command: benchmarks.task_benchmark --dataset benchmarks/datasets/memory_bench_long.json --strategy all --runs 1
-executed_at: 2026-11-10T04:47:37.343598+00:00
-commit: f47caa4
+command: python benchmarks.task_benchmark --dataset benchmarks/datasets/memory_bench_long.json --strategy all --runs 1
+executed_at: 2026-11-10T11:39:11.149802+00:00
+commit: 07eff76
 exit_code: 0
 ----------------------------------------------------------------------
 mode: mock

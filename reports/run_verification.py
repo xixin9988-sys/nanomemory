@@ -42,6 +42,35 @@ def _commit() -> str:
         return "unknown"
 
 
+def _display(command: list[str]) -> list[str]:
+    """Render a command without machine-specific absolute paths (artifacts are published)."""
+    rendered: list[str] = []
+    for part in command:
+        if part == PYTHON:
+            rendered.append("python")
+        elif Path(part).name.lower() in {"ruff", "ruff.exe"}:
+            rendered.append("ruff")
+        else:
+            rendered.append(part)
+    return rendered
+
+
+def _scrub_junit() -> None:
+    """Remove local identifiers pytest writes into the JUnit artifact."""
+    junit = REPORTS / "phase9_junit.xml"
+    if not junit.is_file():
+        return
+    import re
+
+    text = junit.read_text(encoding="utf-8")
+    text = re.sub(r'\s+hostname="[^"]*"', "", text, count=1)
+    # Skip messages embed the absolute test path; artifacts are published.
+    for root in (str(PROJECT_ROOT), str(PROJECT_ROOT).replace("\\", "/")):
+        text = text.replace(root + "\\", "").replace(root + "/", "")
+    text = text.replace(str(PROJECT_ROOT), ".")
+    junit.write_text(text, encoding="utf-8")
+
+
 def run(name: str, command: list[str], *, timeout: int = 1800) -> int:
     REPORTS.mkdir(parents=True, exist_ok=True)
     target = REPORTS / name
@@ -57,12 +86,12 @@ def run(name: str, command: list[str], *, timeout: int = 1800) -> int:
         env={**os.environ, "PYTHONIOENCODING": "utf-8"},
     )
     output = (
-        f"command: {' '.join(command)}\n"
+        f"command: {' '.join(_display(command))}\n"
         f"executed_at: {started}\n"
         f"commit: {_commit()}\n"
         f"exit_code: {completed.returncode}\n"
         f"{'-' * 70}\n"
-        f"{completed.stdout or ""}"
+        f"{completed.stdout or ''}"
     )
     if (completed.stderr or "").strip():
         output += f"\n{'-' * 70}\nstderr:\n{completed.stderr}"
@@ -86,6 +115,7 @@ def main() -> int:
             "--cov-report=xml:reports/phase9_coverage.xml",
         ],
     )
+    _scrub_junit()
     failures += run("phase9_ruff_check.txt", [*RUFF, "check", "."])
     failures += run("phase9_ruff_format.txt", [*RUFF, "format", "--check", "."])
     failures += run(

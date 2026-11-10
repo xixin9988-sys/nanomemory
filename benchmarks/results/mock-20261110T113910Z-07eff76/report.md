@@ -1,11 +1,11 @@
 # NanoMemory Benchmark Report
 
-- run: `mock-20261110T044412Z-922c814`
+- run: `mock-20261110T113910Z-07eff76`
 - mode: **mock** (mock-context-echo / context-echo)
 - dataset: `nanomemory-core-facts-long-history` sha256 `aed258ddf03b6022f8601c43c8897f41c28ca03d7ecd95eb1928832cfa9c1698`
 - cases: 10 · runs per case: 1 · seed 1234
-- commit: `922c814` · estimator: `heuristic-cjk1-latin4-v1`
-- generated: 2026-11-10T04:44:12.483133+00:00
+- commit: `07eff76` · estimator: `heuristic-cjk1-latin4-v1`
+- generated: 2026-11-10T11:39:10.611034+00:00
 
 > context_recall_proxy (mock mode measures whether the context contained the facts; it is not a model-capability or real-API measurement)
 

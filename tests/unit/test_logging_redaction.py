@@ -47,6 +47,8 @@ FAKE_PEM = (
 @pytest.mark.parametrize(
     "sample",
     [FAKE_OPENAI, FAKE_ANTHROPIC, FAKE_GITHUB, FAKE_GITHUB_PAT, FAKE_AWS, FAKE_PEM],
+    # Explicit ids keep the fake key values out of node ids (they appear in JUnit artifacts).
+    ids=["openai", "anthropic", "github_token", "github_pat", "aws", "pem"],
 )
 def test_redact_removes_secret_patterns(sample: str) -> None:
     cleaned = redact(f"value={sample} tail")

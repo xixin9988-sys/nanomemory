@@ -61,6 +61,8 @@ filterwarnings = ["error::DeprecationWarning:nanomemory.*"]
 [tool.coverage.run]
 branch = true
 source = ["nanomemory"]
+# Keep coverage.xml free of absolute local paths (it is published as an artifact).
+relative_files = true
 omit = ["nanomemory/dashboard/*"]
 
 [tool.coverage.report]

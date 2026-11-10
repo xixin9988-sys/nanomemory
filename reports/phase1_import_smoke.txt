@@ -1,11 +1,11 @@
-command: C:\Users\yan\OneDrive\文档\deepseek-harness\default-workspace\NanoMemory\.venv\Scripts\python.exe -c import importlib, nanomemory
+command: python -c import importlib, nanomemory
 mods = ['nanomemory', 'nanomemory.core', 'nanomemory.api', 'nanomemory.providers', 'nanomemory.dashboard']
 for name in mods:
     importlib.import_module(name)
 print('import smoke ok', nanomemory.__version__)
 
-executed_at: 2026-11-10T11:19:23.519489+00:00
-commit: b0fe48d
+executed_at: 2026-11-10T11:40:38.007319+00:00
+commit: 07eff76
 exit_code: 0
 ----------------------------------------------------------------------
 import smoke ok 0.1.0

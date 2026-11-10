@@ -1,4 +1,4 @@
-command: C:\Users\yan\OneDrive\文档\deepseek-harness\default-workspace\NanoMemory\.venv\Scripts\python.exe -c import sys
+command: python -c import sys
 from setuptools import find_packages
 packages = sorted(find_packages(include=['nanomemory*']))
 print('discovered packages:', packages)
@@ -7,8 +7,8 @@ assert 'nanomemory.core' in packages
 assert 'nanomemory.api' in packages
 print('package discovery ok')
 
-executed_at: 2026-11-10T11:19:23.950886+00:00
-commit: b0fe48d
+executed_at: 2026-11-10T11:40:38.321419+00:00
+commit: 07eff76
 exit_code: 0
 ----------------------------------------------------------------------
 discovered packages: ['nanomemory', 'nanomemory.api', 'nanomemory.api.routes', 'nanomemory.core', 'nanomemory.dashboard', 'nanomemory.dashboard.components', 'nanomemory.providers']

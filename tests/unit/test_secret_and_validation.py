@@ -39,6 +39,9 @@ FAKE_HEX = hashlib.sha256(b"fixture").hexdigest()
         (FAKE_AWS, "aws_access_key"),
         (FAKE_PEM, "private_key_block"),
     ],
+    # Explicit ids: pytest would otherwise put the fake key value into the node id, and node
+    # ids are published in the JUnit artifact.
+    ids=["openai", "anthropic", "github_token", "github_pat", "aws", "pem"],
 )
 def test_explicit_patterns_detected(text: str, pattern: str) -> None:
     scanner = SecretScanner()

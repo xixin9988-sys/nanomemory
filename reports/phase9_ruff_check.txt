@@ -1,6 +1,6 @@
-command: C:/Users/yan/OneDrive/文档/deepseek-harness/default-workspace/NanoMemory/.venv/Scripts/ruff.exe check .
-executed_at: 2026-11-10T11:19:23.072581+00:00
-commit: b0fe48d
+command: ruff check .
+executed_at: 2026-11-10T11:40:37.609119+00:00
+commit: 07eff76
 exit_code: 0
 ----------------------------------------------------------------------
 All checks passed!

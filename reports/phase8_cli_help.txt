@@ -1,6 +1,6 @@
-command: C:\Users\yan\OneDrive\文档\deepseek-harness\default-workspace\NanoMemory\.venv\Scripts\python.exe scripts/init_storage.py --help
-executed_at: 2026-11-10T11:19:24.315612+00:00
-commit: b0fe48d
+command: python scripts/init_storage.py --help
+executed_at: 2026-11-10T11:40:38.608109+00:00
+commit: 07eff76
 exit_code: 0
 ----------------------------------------------------------------------
 usage: init_storage.py [-h] [--root ROOT]

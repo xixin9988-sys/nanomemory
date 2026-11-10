@@ -1,6 +1,6 @@
-command: C:\Users\yan\OneDrive\文档\deepseek-harness\default-workspace\NanoMemory\.venv\Scripts\python.exe reports/sensitive_scan.py
-executed_at: 2026-11-10T11:19:24.991898+00:00
-commit: b0fe48d
+command: python reports/sensitive_scan.py
+executed_at: 2026-11-10T11:40:39.114246+00:00
+commit: 07eff76
 exit_code: 0
 ----------------------------------------------------------------------
-no credential-like material found outside allowed fixture files (300 files)
+no credential-like material found outside allowed fixture files (276 files)

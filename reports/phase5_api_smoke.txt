@@ -1,5 +1,5 @@
-command: C:\Users\yan\OneDrive\�ĵ�\deepseek-harness\default-workspace\NanoMemory\.venv\Scripts\python.exe -m uvicorn nanomemory.api.main:app --host 127.0.0.1 --port 59985 --workers 1 --log-level warning
-port: 59985
+command: python -m uvicorn nanomemory.api.main:app --host 127.0.0.1 --port 60443 --workers 1 --log-level warning
+port: 60443
 
 check                                       result  detail
 ----------------------------------------------------------------------------------------------------
@@ -19,5 +19,4 @@ scripts/health_probe.py                     PASS    {"status_code": 200, "servic
 
 checks: 13 �� failures: 0
 
-executed_at: 2026-11-10T04:47:39.3847983+00:00
-commit: f47caa4
+commit: (post-scrub regeneration)

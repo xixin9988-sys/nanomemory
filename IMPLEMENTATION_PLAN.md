@@ -12,7 +12,7 @@
 | 項目 | 結果 |
 | --- | --- |
 | 作業系統 | Windows（10.0.26200 級別）、PowerShell |
-| 工作目錄 | `C:\Users\yan\OneDrive\文档\deepseek-harness\default-workspace` |
+| 工作目錄 | `<workspace>`（使用者本機路徑，不記錄於本文件） |
 | 既有使用者內容 | 有（其他專案目錄與檔案），**因此本專案建立於子目錄 `NanoMemory/`，不覆寫任何既有檔案** |
 | Python | 系統 `python` 3.14.8；專案虛擬環境 `NanoMemory/.venv` 使用 **CPython 3.12.15**（符合規格 ≥3.11，且 3.12 對 streamlit/pandas 有完整 wheel 支援） |
 | 已安裝（venv 實測） | fastapi 0.162.2、pydantic 2.14.3、pydantic-settings、uvicorn 0.54、streamlit 1.67.0、pytest 9.2.0、httpx、filelock、openai 3.x、ruff、pytest-cov、pytest-asyncio、hypothesis |
@@ -272,7 +272,7 @@ Streamlit Dashboard ──HTTP──> FastAPI ──> MemoryManager (Controller)
 | Windows 不支援 directory fsync | durability 無法完全保證 | `fsync_dir` 回傳 False 並記錄；SECURITY.md 說明；測試以平台標記 |
 | 多 worker 部署 | rate limit / 鎖假設失效 | v1 僅支援單 worker；啟動檢查，設定多 worker 時拒絕或標 degraded |
 | Streamlit session_state 生命週期 | admin token 可能殘留 | 每次破壞性操作重新輸入；一次性 nonce widget key；文件說明不等於身份驗證 |
-| 檔案鎖在 OneDrive 同步目錄 | 同步衝突風險 | 文件警告；storage 可設定到非同步目錄 |
+| 檔案鎖在雲端同步目錄 | 同步衝突風險 | 文件警告；storage 可設定到非同步目錄 |
 | Token 估算偏差 | budget 低估 | 保守 80% margin + tokenizer 可替換 + 標示 estimated |
 | Docker 環境不可用 | Docker 驗收無法通過 | 標示 NOT VERIFIED，不假稱通過 |
 | 規模（5000 筆）效能 | 讀寫延遲 | 單檔 JSON、寫入時全量重寫屬已知設計；文件記錄上限與延遲 |

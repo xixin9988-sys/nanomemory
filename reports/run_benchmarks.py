@@ -40,7 +40,7 @@ def run(report: str, args: list[str]) -> int:
         timeout=1800,
     )
     body = (
-        f"command: {' '.join(args)}\n"
+        f"command: python {' '.join(args)}\n"
         f"executed_at: {datetime.now(UTC).isoformat()}\n"
         f"commit: {commit()}\n"
         f"exit_code: {completed.returncode}\n"
