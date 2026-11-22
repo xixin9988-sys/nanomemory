@@ -2,6 +2,22 @@
 
 All notable changes to this project. Dates are ISO-8601.
 
+## [Unreleased]
+
+### Added
+
+- **REST long-term create accepts provenance**: `POST /api/v1/memory/long-term` now takes an
+  optional `provenance` object (`source_kind`, `source_ref`, `created_by`, `note`,
+  `derived_from`) and returns it unchanged from `POST`, `GET /long-term` and
+  `GET /long-term/{id}`. This lets an orchestrating layer (OmniCare) record which
+  conversation/run a memory came from. Unknown provenance fields are rejected with
+  `422 validation_failed`; the existing trust clamps and secret scanning are unchanged.
+- **REST long-term create accepts `user_id`**: the optional `user_id` (max 80) is persisted on
+  the record and used by `GET /api/v1/memory/recall?user_id=` filtering, so a single
+  NanoMemory instance can serve multiple users without returning another user's memories.
+  Existing records keep `user_id=null` (unscoped) and are only returned when recall omits
+  the filter.
+
 ## [0.2.0] - 2026-11-10
 
 Memory-quality and cognitive-memory release. Storage, transactions, locks and recovery are
