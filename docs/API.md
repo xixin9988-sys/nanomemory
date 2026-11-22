@@ -65,13 +65,46 @@ PUT body:
 | Method | Path | Notes |
 | --- | --- | --- |
 | GET | `/api/v1/memory/long-term` | filters: `category`, `tag`, `status`, `include_archived`, `limit`, `offset` |
-| POST | `/api/v1/memory/long-term` | create; secrets are rejected |
+| POST | `/api/v1/memory/long-term` | create; optional `provenance` and `user_id`; secrets are rejected |
 | GET | `/api/v1/memory/long-term/{id}` | one record |
 | PATCH | `/api/v1/memory/long-term/{id}` | requires `if_version`; `409` on mismatch |
 | DELETE | `/api/v1/memory/long-term/{id}` | soft archive by default; `permanent=true` needs admin |
 | GET | `/api/v1/memory/capacity` | `capacity_used`, `capacity_limit`, `capacity_percent` |
 | GET | `/api/v1/memory/statistics` | counters for the dashboard (no memory contents) |
 | GET | `/api/v1/memory/export` | admin only; full export |
+
+POST body fields: `content` (required), `category`, `source`, `source_type`
+(`user / model / tool / system / import / unknown`), `confidence`, `importance`, `tags`,
+`trust_level`, optional `user_id` and the optional `provenance` object. `user_id` (max 80)
+scopes recall: `GET /api/v1/memory/recall?user_id=` only returns records written with the
+same owner id, so one NanoMemory instance can serve several users without mixing memories.
+Provenance records where a memory came
+from; the values are stored on the record and returned unchanged by `POST`, `GET /long-term`
+and `GET /long-term/{id}`:
+
+```json
+{
+  "content": "The user prefers concise status updates.",
+  "category": "preference",
+  "source": "user_explicit_statement",
+  "source_type": "user",
+  "user_id": "demo_user_001",
+  "tags": ["omnicare", "preference"],
+  "provenance": {
+    "source_kind": "user",
+    "source_ref": "omnicare://sessions/<session_id>/runs/<run_id>",
+    "created_by": "omnicare.supervisor"
+  }
+}
+```
+
+`provenance` fields: `source_kind` (`user`, `model`, `tool`, `file`, `composed`, `import`,
+`unknown`; default `user` when the object is present), `source_ref` (max 500 chars),
+`created_by` (max 80), `note` (max 500) and `derived_from` (max 50 ids). Unknown fields are
+rejected with `422 validation_failed`. Provenance is descriptive only: the `confidence` /
+`importance` / `trust_level` clamps still key on `source_type`, and a `source_kind=model`
+record is still stored as `pending_confirmation`. A record created without `provenance`
+keeps the storage default (`source_kind=unknown`).
 
 ### Episodes
 
@@ -146,6 +179,15 @@ curl -s -X PUT http://127.0.0.1:8000/api/v1/memory/working \
 curl -s -X POST http://127.0.0.1:8000/api/v1/memory/long-term \
   -H "Content-Type: application/json" \
   -d '{"content":"The retriever honours a hard token budget.","category":"architecture","tags":["retrieval"]}'
+
+# long-term memory with provenance (caller records the originating conversation/run)
+curl -s -X POST http://127.0.0.1:8000/api/v1/memory/long-term \
+  -H "Content-Type: application/json" \
+  -d '{"content":"The user prefers concise status updates.","category":"preference",
+       "source":"user_explicit_statement","source_type":"user","tags":["omnicare"],
+       "provenance":{"source_kind":"user",
+                     "source_ref":"omnicare://sessions/<session_id>/runs/<run_id>",
+                     "created_by":"omnicare.supervisor"}}'
 
 # agent run
 curl -s -X POST http://127.0.0.1:8000/api/v1/agent/run \

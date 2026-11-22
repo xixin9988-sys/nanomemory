@@ -169,6 +169,127 @@ def test_long_term_crud(api) -> None:
     assert deleted.json()["permanent"] is False
 
 
+OMNICARE_SOURCE_REF = "omnicare://sessions/sess-0001/runs/run-0002"
+
+
+def _omnicare_payload(**overrides):
+    payload = {
+        "content": "The user prefers concise status updates.",
+        "category": "preference",
+        "source": "user_explicit_statement",
+        "source_type": "user",
+        "tags": ["omnicare", "preference"],
+        "provenance": {
+            "source_kind": "user",
+            "source_ref": OMNICARE_SOURCE_REF,
+            "created_by": "omnicare.supervisor",
+        },
+    }
+    payload.update(overrides)
+    return payload
+
+
+def test_long_term_create_with_provenance_round_trip(api) -> None:
+    client, _manager = api
+    created = client.post("/api/v1/memory/long-term", json=_omnicare_payload())
+    assert created.status_code == 200
+    record = created.json()
+    assert record["provenance"]["source_kind"] == "user"
+    assert record["provenance"]["source_ref"] == OMNICARE_SOURCE_REF
+    assert record["provenance"]["created_by"] == "omnicare.supervisor"
+
+    listed = client.get("/api/v1/memory/long-term", params={"category": "preference"})
+    assert listed.status_code == 200
+    records = listed.json()["records"]
+    assert [item["id"] for item in records] == [record["id"]]
+    assert records[0]["provenance"]["source_kind"] == "user"
+    assert records[0]["provenance"]["source_ref"] == OMNICARE_SOURCE_REF
+    assert records[0]["provenance"]["created_by"] == "omnicare.supervisor"
+
+    fetched = client.get(f"/api/v1/memory/long-term/{record['id']}")
+    assert fetched.status_code == 200
+    provenance = fetched.json()["provenance"]
+    assert provenance["source_kind"] == "user"
+    assert provenance["source_ref"] == OMNICARE_SOURCE_REF
+    assert provenance["created_by"] == "omnicare.supervisor"
+
+
+def test_long_term_without_provenance_keeps_storage_default(api) -> None:
+    client, _manager = api
+    created = client.post(
+        "/api/v1/memory/long-term",
+        json={"content": "A plain memory written without provenance.", "category": "plain"},
+    )
+    assert created.status_code == 200
+    provenance = created.json()["provenance"]
+    assert provenance["source_kind"] == "unknown"
+    assert provenance["source_ref"] is None
+
+
+def test_long_term_provenance_validation_rejected(api) -> None:
+    client, _manager = api
+    invalid_kind = _omnicare_payload(
+        provenance={"source_kind": "nonsense", "source_ref": OMNICARE_SOURCE_REF}
+    )
+    overlong_ref = _omnicare_payload(provenance={"source_kind": "user", "source_ref": "x" * 501})
+    overlong_created_by = _omnicare_payload(
+        provenance={"source_kind": "user", "created_by": "y" * 81}
+    )
+    unknown_field = _omnicare_payload(provenance={"source_kind": "user", "unexpected": "nope"})
+    for payload in (invalid_kind, overlong_ref, overlong_created_by, unknown_field):
+        response = client.post("/api/v1/memory/long-term", json=payload)
+        assert response.status_code == 422
+        assert response.json()["code"] == "validation_failed"
+    assert client.get("/api/v1/memory/long-term").json()["count"] == 0
+
+
+def test_long_term_provenance_does_not_bypass_trust_clamping(api) -> None:
+    client, _manager = api
+    created = client.post(
+        "/api/v1/memory/long-term",
+        json=_omnicare_payload(
+            content="A model may infer that the user likes terse answers.",
+            category="inference",
+            source="model_extraction",
+            source_type="model",
+            confidence="high",
+            importance=5,
+            trust_level="verified",
+            provenance={
+                "source_kind": "model",
+                "source_ref": "omnicare://sessions/sess-0001/runs/run-0003",
+                "created_by": "omnicare.supervisor",
+            },
+        ),
+    )
+    assert created.status_code == 200
+    record = created.json()
+    assert record["confidence"] == "low"
+    assert record["importance"] <= 3
+    assert record["trust_level"] == "unknown"
+    # The existing model-derived write rule still applies when provenance says model.
+    assert record["status"] == "pending_confirmation"
+
+
+def test_long_term_provenance_secret_scanning_unchanged(api) -> None:
+    client, _manager = api
+    secret = "sk-" + "A1b2C3d4E5f6G7h8I9j0K1l2M3n4O5p6"
+    response = client.post(
+        "/api/v1/memory/long-term",
+        json=_omnicare_payload(
+            provenance={
+                "source_kind": "user",
+                "source_ref": OMNICARE_SOURCE_REF,
+                "created_by": "omnicare.supervisor",
+                "note": f"raw credential {secret}",
+            }
+        ),
+    )
+    assert response.status_code == 422
+    assert response.json()["code"] == "secret_detected"
+    assert client.get("/api/v1/memory/long-term").json()["count"] == 0
+
+
 def test_episode_append_and_list(api) -> None:
     client, _manager = api
     created = client.post(
@@ -377,3 +498,45 @@ def test_statistics_endpoint(api) -> None:
     payload = response.json()
     assert payload["sessions"] >= 1
     assert "capacity" in payload["long_term"]
+
+
+def test_long_term_user_id_round_trip_and_recall_filter(api) -> None:
+    client, _manager = api
+    first = client.post(
+        "/api/v1/memory/long-term",
+        json={
+            "content": "Alice prefers express shipping for every order.",
+            "category": "preference",
+            "source": "user_explicit_statement",
+            "source_type": "user",
+            "user_id": "alice",
+        },
+    )
+    assert first.status_code == 200
+    assert first.json()["user_id"] == "alice"
+
+    second = client.post(
+        "/api/v1/memory/long-term",
+        json={
+            "content": "Bob prefers pickup at the nearest store instead.",
+            "category": "preference",
+            "source": "user_explicit_statement",
+            "source_type": "user",
+            "user_id": "bob",
+        },
+    )
+    assert second.status_code == 200
+
+    listed = client.get("/api/v1/memory/long-term").json()["records"]
+    owners = {record["id"]: record["user_id"] for record in listed}
+    assert owners[first.json()["id"]] == "alice"
+    assert owners[second.json()["id"]] == "bob"
+
+    alice_hits = client.get(
+        "/api/v1/memory/recall",
+        params={"q": "express shipping preference", "user_id": "alice"},
+    )
+    assert alice_hits.status_code == 200
+    alice_ids = {item["id"] for item in alice_hits.json()["items"]}
+    assert first.json()["id"] in alice_ids
+    assert second.json()["id"] not in alice_ids

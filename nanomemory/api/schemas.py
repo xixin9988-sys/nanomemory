@@ -10,6 +10,7 @@ from nanomemory.core.memory_models import (
     Confidence,
     GoalStatus,
     MemoryStatus,
+    SourceKind,
     SourceType,
     TrustLevel,
 )
@@ -31,6 +32,28 @@ class WorkingMemoryProposalRequest(BaseModel):
     allow_task_removal: bool = False
 
 
+class ProvenanceInput(BaseModel):
+    """Caller-supplied provenance for a new long-term memory.
+
+    Mirrors the persisted Provenance model but is a separate input DTO so the REST contract
+    can evolve without changing the stored schema. Provenance is descriptive metadata: it
+    never widens the trust clamps applied to confidence / importance / trust_level, which
+    stay keyed on the record source_type.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    source_kind: SourceKind = SourceKind.USER
+    source_ref: str | None = Field(
+        default=None,
+        max_length=500,
+        description="Opaque origin reference, e.g. omnicare://sessions/<id>/runs/<id>",
+    )
+    created_by: str = Field(default="unknown", max_length=80)
+    note: str | None = Field(default=None, max_length=500)
+    derived_from: list[str] = Field(default_factory=list, max_length=50)
+
+
 class LongTermCreateRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -42,6 +65,12 @@ class LongTermCreateRequest(BaseModel):
     importance: int = Field(default=3, ge=1, le=5)
     tags: list[str] = Field(default_factory=list, max_length=30)
     trust_level: TrustLevel | None = None
+    #: Optional owner id; recall?user_id= only returns records written with the same id.
+    user_id: str | None = Field(default=None, max_length=80)
+    provenance: ProvenanceInput | None = Field(
+        default=None,
+        description="Optional origin metadata; stored on the record and returned by reads.",
+    )
 
 
 class LongTermUpdateRequest(BaseModel):
@@ -132,6 +161,7 @@ __all__ = [
     "EpisodeCreateRequest",
     "LongTermCreateRequest",
     "LongTermUpdateRequest",
+    "ProvenanceInput",
     "QuarantineAcknowledgeRequest",
     "RestoreRequest",
     "SessionCreateResponse",

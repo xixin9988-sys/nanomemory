@@ -264,5 +264,30 @@ Write rules:
 * a newer explicit statement with high token overlap supersedes the older `active` record and
   keeps it queryable through `include_superseded=true`.
 
+### Writing provenance over REST
+
+`POST /api/v1/memory/long-term` accepts an optional `provenance` object; the values are
+stored verbatim on the record and returned by subsequent reads:
+
+```json
+{"content": "The user prefers concise status updates.",
+ "category": "preference",
+ "source": "user_explicit_statement",
+ "source_type": "user",
+ "tags": ["omnicare", "preference"],
+ "provenance": {
+   "source_kind": "user",
+   "source_ref": "omnicare://sessions/<session_id>/runs/<run_id>",
+   "created_by": "omnicare.supervisor",
+   "note": "captured from a user turn",
+   "derived_from": []
+ }}
+```
+
+`source_kind` follows the enum listed above. Provenance is descriptive metadata only: it
+never loosens the trust clamps, a `source_kind=model` record is still stored as
+`pending_confirmation`, and unknown provenance fields are rejected with
+`422 validation_failed` rather than silently dropped.
+
 Migration: `plan()` yields `long_term:0->1` then `long_term:1->2`; each step is journalled and
 verified, and a crash is recovered by the existing maintenance-marker path.
