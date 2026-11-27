@@ -26,7 +26,18 @@ def test_ensure_within_accepts_root_itself(tmp_path: Path) -> None:
 
 @pytest.mark.parametrize(
     "candidate",
-    ["../escape.md", "..\\escape.md", "../../etc/passwd", "working/../../escape.md"],
+    [
+        "../escape.md",
+        pytest.param(
+            "..\\escape.md",
+            marks=pytest.mark.skipif(
+                os.name != "nt",
+                reason="on POSIX a backslash is a legal filename character, not a separator",
+            ),
+        ),
+        "../../etc/passwd",
+        "working/../../escape.md",
+    ],
 )
 def test_ensure_within_rejects_traversal(tmp_path: Path, candidate: str) -> None:
     root = tmp_path / "storage"
