@@ -1,3 +1,7 @@
+> **2026-11-27 direction notice:** This document records the earlier file-backed / lexical-first NanoMemory design and its historical baseline. For the proposed commercial vector-memory v1 direction, use [PRODUCT_BRIEF_VECTOR_MEMORY_V1.md](product/PRODUCT_BRIEF_VECTOR_MEMORY_V1.md) and [ADR-0001](adr/0001-postgresql-pgvector-primary-memory-store.md). Those documents propose PostgreSQL + pgvector, canonical text plus derived vectors, physical security-domain partitions, hybrid retrieval and a JSON migration path. They do not claim the vector backend is implemented. Where this historical document conflicts with the new proposal, the new product brief and ADR are the current proposal; current main-branch behaviour remains defined by README.md and the implementation. Approval is pending.
+
+---
+
 # NanoMemory 2.0 — IMPLEMENTATION_PLAN
 
 - 文件版本：1.0
