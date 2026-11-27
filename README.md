@@ -22,6 +22,7 @@ to the model, and it keeps working when no model provider is configured.
 | Area | State | Document |
 | --- | --- | --- |
 | Product scope, non-goals, acceptance criteria | frozen | [PRODUCT_REQUIREMENTS_V1](docs/product/PRODUCT_REQUIREMENTS_V1.md) |
+| Milestone status M0–M6 | M0 done, M1 in progress | [ROADMAP_V1](docs/product/ROADMAP_V1.md) |
 | SQLite first, pgvector deferred (supersedes PR #2) | decided | [ADR-0001](docs/adr/0001-sqlite-first-vector-store.md) |
 | Embedding profile / no mixed vector spaces | decided, staged | [ADR-0002](docs/adr/0002-embedding-profile-versioning.md) |
 | Trace privacy and retention | implemented | [Trace policy](docs/security/DATA_CLASSIFICATION_AND_TRACE_POLICY.md) |
