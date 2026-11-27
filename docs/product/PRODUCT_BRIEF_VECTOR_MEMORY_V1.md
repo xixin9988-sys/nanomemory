@@ -186,6 +186,9 @@ These states are required for dashboard, session management, memory review, impo
 
 ## 11. Commercial readiness checklist
 
+Cost, unit economics, legal/IP and AI-governance mapping are specified in [COST_AND_AI_GOVERNANCE_V1.md](COST_AND_AI_GOVERNANCE_V1.md). Treat all cost figures as unmeasured until a real deployment produces exact usage and infrastructure records.
+
+
 - Security threat model and SECURITY.md.
 - Secrets scan and dependency vulnerability scan in CI.
 - No model or embedding API key in browser code.
