@@ -23,6 +23,7 @@ from nanomemory.core.errors import ErrorCode, NanoMemoryError
 from nanomemory.providers.base import ProviderError
 from nanomemory.vector.db import VectorDatabase
 from nanomemory.vector.embeddings import EmbeddingProvider, build_embedding_provider
+from nanomemory.vector.repository import VectorMemoryRepository
 from nanomemory.vector.retrieval import (
     ScoredCandidate,
     content_signal,
@@ -48,6 +49,7 @@ from nanomemory.vector.schemas import (
 )
 from nanomemory.vector.store import SQLiteVectorStore
 from nanomemory.vector.trace import TraceStore
+from nanomemory.vector.trace_policy import TracePolicy
 
 log = logging.getLogger("nanomemory.vector")
 
@@ -109,10 +111,11 @@ class VectorMemoryService:
         self.settings = settings
         self._provider = provider
         self._database = database
-        self._store: SQLiteVectorStore | None = None
+        self._store: VectorMemoryRepository | None = None
         self._traces: TraceStore | None = None
         self._ready = False
         self._lock = threading.Lock()
+        self.trace_policy = TracePolicy.from_settings(settings)
 
     # ------------------------------------------------------------------ wiring
     def ensure_ready(self) -> None:
@@ -128,7 +131,7 @@ class VectorMemoryService:
             self._ready = True
 
     @property
-    def store(self) -> SQLiteVectorStore:
+    def store(self) -> VectorMemoryRepository:
         self.ensure_ready()
         assert self._store is not None
         return self._store
@@ -223,7 +226,7 @@ class VectorMemoryService:
 
     def _record_trace(self, trace: TraceLog) -> None:
         try:
-            self.traces.record(trace)
+            self.traces.record(self.trace_policy.apply(trace))
         except Exception:  # noqa: BLE001 - observability must not break the request
             log.warning("trace_write_failed", extra={"event": "trace_write_failed"})
 
@@ -810,6 +813,11 @@ class VectorMemoryService:
     def export_badcases(self, context: TenantContext, path: Path) -> int:
         return self.traces.export_badcases(context.tenant_id, path)
 
+    def prune_traces(self, context: TenantContext, days: int | None = None) -> dict[str, int]:
+        """Delete traces older than the retention window for this tenant only."""
+        effective = int(days or self.trace_policy.retention_days)
+        return self.traces.prune(context.tenant_id, effective)
+
     # ------------------------------------------------------------------ stats
     def stats(self, context: TenantContext) -> dict[str, Any]:
         return {
@@ -820,6 +828,10 @@ class VectorMemoryService:
                 **self.provider.describe(),
                 "configured_dim": int(self.settings.embedding_dimension),
                 "cache": getattr(self.provider, "cache_stats", lambda: {})(),
+            },
+            "trace_policy": {
+                "content_mode": self.trace_policy.mode,
+                "retention_days": self.trace_policy.retention_days,
             },
             "retrieval": {
                 "content_floor": self.settings.vector_content_floor,

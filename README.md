@@ -10,15 +10,34 @@ automatic memory formation, **vector + BM25 hybrid retrieval**, conflict-aware u
 reversible forgetting lifecycle and a traceable audit trail. Memory belongs to the user, not
 to the model, and it keeps working when no model provider is configured.
 
-> Status: **v0.3.0 — vector memory (v2)**. Long-term recall now runs on an embedding-backed
-> SQLite vector store with SQL-level tenant pre-filtering, versioned rollback, per-call traces
-> and a measured eval set. The v1 JSON store remains for Working Memory, episodes and backwards
-> compatibility.
+> Status: **v0.4.0 — v1.0 product baseline hardening.** Long-term recall runs on an
+> embedding-backed SQLite vector store with SQL-level tenant pre-filtering, versioned rollback,
+> per-call traces and a measured eval set. This release adds the pieces a v1 product needs to be
+> operable: a repository contract, trace content minimisation with retention, backup/restore with
+> verification, and frozen product/release documents.
 > Memory content is always treated as untrusted reference data, never as instructions.
+
+## v1.0 baseline (what is actually delivered)
+
+| Area | State | Document |
+| --- | --- | --- |
+| Product scope, non-goals, acceptance criteria | frozen | [PRODUCT_REQUIREMENTS_V1](docs/product/PRODUCT_REQUIREMENTS_V1.md) |
+| SQLite first, pgvector deferred (supersedes PR #2) | decided | [ADR-0001](docs/adr/0001-sqlite-first-vector-store.md) |
+| Embedding profile / no mixed vector spaces | decided, staged | [ADR-0002](docs/adr/0002-embedding-profile-versioning.md) |
+| Trace privacy and retention | implemented | [Trace policy](docs/security/DATA_CLASSIFICATION_AND_TRACE_POLICY.md) |
+| Release gates and honest status | defined | [RELEASE_GATES_V1](docs/release/RELEASE_GATES_V1.md) |
+| Backup / verify / restore | implemented + tested | [Runbook](docs/operations/BACKUP_RESTORE.md) |
+
+Two defaults worth knowing before deployment:
+
+- **Trace content is minimised by default.** Raw query/prompt/response text is not stored unless
+  `NANOMEMORY_TRACE_CONTENT_MODE=full` is set deliberately.
+- **The offline hashing provider is not a semantic model.** The measured 0.871 Recall@5 is a
+  lexical baseline; v1 release gates require a real embedding provider run (see release gates).
 
 ## Vector memory in 30 seconds
 
-`bash
+```bash
 pip install -e .
 nanomemory init
 nanomemory start   # http://127.0.0.1:8000/docs
@@ -32,7 +51,7 @@ curl -X POST http://127.0.0.1:8000/api/v1/memory/vectors/search \
   -H 'Content-Type: application/json' \
   -H 'X-NM-Tenant: acme' -H 'X-NM-User: u-1' \
   -d '{"query":"A1001 的运单号"}'
-`
+```
 
 Every write is embedded, versioned and traced; every search returns per-signal scores, a
 `trace_id` and an explicit `insufficient_context` refusal instead of a plausible guess.

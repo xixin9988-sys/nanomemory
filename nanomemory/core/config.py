@@ -121,6 +121,11 @@ class Settings(BaseSettings):
 
     vector_min_result_score: float = 0.22
     vector_trace_context_chars: int = 4000
+    trace_content_mode: Literal["minimal", "full"] = "minimal"
+    """minimal (default) stores ids, scores and hashes; full stores bounded raw text."""
+
+    trace_content_max_chars: int = 4000
+    trace_retention_days: int = 30
     badcase_export_file: Path | None = None
     context_signing_key: SecretStr | None = None
     """Shared secret with the gateway (mem-guard).  Required in production."""
@@ -234,6 +239,10 @@ class Settings(BaseSettings):
             raise ValueError("embedding_dimension must be >= 32")
         if self.context_signing_max_age_seconds < 1:
             raise ValueError("context_signing_max_age_seconds must be >= 1")
+        if self.trace_retention_days < 1:
+            raise ValueError("trace_retention_days must be >= 1")
+        if self.trace_content_max_chars < 0:
+            raise ValueError("trace_content_max_chars must be >= 0")
         if self.environment == "production" and self.context_signing_key is None:
             # Fail closed: an unsigned production deployment cannot prove tenant scope.
             raise ValueError(

@@ -8,6 +8,7 @@ what closes the loop in standard #4 instead of leaving it as a dashboard promise
 from __future__ import annotations
 
 import json
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -201,6 +202,33 @@ class TraceStore:
             for case in cases:
                 handle.write(json.dumps(case, ensure_ascii=False) + "\n")
         return len(cases)
+
+    def prune(self, tenant_id: str, older_than_days: int) -> dict[str, int]:
+        """Delete traces (and their feedback) older than the tenant's retention window."""
+        if older_than_days < 1:
+            raise NanoMemoryError(
+                code=ErrorCode.VALIDATION_FAILED,
+                message="older_than_days must be >= 1",
+            )
+        cutoff = (datetime.now(UTC) - timedelta(days=older_than_days)).isoformat()
+        with self.db.transaction() as conn:
+            trace_ids = [
+                row["trace_id"]
+                for row in conn.execute(
+                    "SELECT trace_id FROM traces WHERE tenant_id = ? AND created_at < ?",
+                    (tenant_id, cutoff),
+                ).fetchall()
+            ]
+            if not trace_ids:
+                return {"traces": 0, "feedback": 0}
+            placeholders = ",".join("?" * len(trace_ids))
+            feedback = conn.execute(
+                f"DELETE FROM feedback WHERE trace_id IN ({placeholders})", trace_ids
+            ).rowcount
+            traces = conn.execute(
+                f"DELETE FROM traces WHERE trace_id IN ({placeholders})", trace_ids
+            ).rowcount
+        return {"traces": int(traces or 0), "feedback": int(feedback or 0)}
 
     # ------------------------------------------------------------------ stats
     def stats(self, tenant_id: str) -> dict[str, Any]:

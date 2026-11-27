@@ -2,6 +2,31 @@
 
 All notable changes to this project. Dates are ISO-8601.
 
+## [0.4.0] - 2026-11-27
+
+### Added
+
+- **Repository contract**: VectorMemoryRepository Protocol; SQLiteVectorStore is adapter #1 and
+  passes a shared contract suite (tests/contract/test_vector_repository.py). A future pgvector
+  adapter must pass it before it can be selected (ADR-0001).
+- **Trace privacy**: TracePolicy with content minimisation as the default
+  (NANOMEMORY_TRACE_CONTENT_MODE=minimal): raw query, prompt context and model response are not
+  persisted; hashes and lengths are. Opt-in full mode is bounded and documented.
+- **Retention**: TraceStore.prune() and admin-only POST /api/v1/admin/traces/prune delete a
+  tenant's expired traces and their feedback.
+- **Backup/verify/restore**: nanomemory/vector/backup.py plus scripts/vector_backup.py using
+  SQLite's online backup API, with SHA-256 manifest, integrity check, pre-restore snapshot and
+  atomic replace. Runbook in docs/operations/BACKUP_RESTORE.md.
+- **Product baseline docs**: PRD, ADR-0001 (SQLite first), ADR-0002 (embedding profiles), data
+  classification/trace policy, release gates v1.
+- **CI**: GitHub Actions for lint, tests (3.11/3.12), repository contract and the eval gate.
+
+### Changed
+
+- Version 0.4.0.
+- The default trace no longer stores raw query text; operators who need it must opt in and record
+  the privacy decision.
+
 ## [0.3.0] - 2026-11-27
 
 ### Added

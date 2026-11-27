@@ -291,6 +291,21 @@ def export_badcases(manager: ManagerDep, context: ContextDep) -> dict[str, Any]:
     }
 
 
+@observability.post("/admin/traces/prune", dependencies=[Depends(require_admin)])
+def prune_traces(
+    manager: ManagerDep,
+    context: ContextDep,
+    days: int | None = Query(default=None, ge=1, le=3650),
+) -> dict[str, Any]:
+    """Apply the tenant's trace retention window on demand (admin only)."""
+    result = manager.require_vector().prune_traces(context, days)
+    return {
+        **result,
+        "retention_days": days or manager.settings.trace_retention_days,
+        "note": "Only this tenant's traces and their feedback rows are deleted.",
+    }
+
+
 @observability.get("/traces/{trace_id}", dependencies=[Depends(_limit)])
 def get_trace(trace_id: str, manager: ManagerDep, context: ContextDep) -> dict[str, Any]:
     trace = manager.require_vector().trace(context, trace_id)

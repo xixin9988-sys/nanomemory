@@ -23,7 +23,7 @@ if TYPE_CHECKING:  # pragma: no cover - typing only
 __all__ = ["__version__", "PRODUCT_NAME", "Memory", "NanoMemory"]
 
 PRODUCT_NAME = "NanoMemory"
-__version__ = "0.3.0"
+__version__ = "0.4.0"
 
 
 def __getattr__(name: str) -> Any:
