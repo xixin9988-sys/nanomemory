@@ -38,7 +38,7 @@ In scope:
 - A typed embedding-provider interface, initially supporting one configured active embedding profile per deployment and at least one local and one remote provider adapter.
 - Persisted source text, normalized metadata, provenance, lifecycle state, ownership, access scope, embedding profile/version and vector.
 - Hybrid retrieval: dense vector candidates, lexical candidates, optional relation expansion, reciprocal-rank fusion, explainable reranking and token-budget packing.
-- Server-side identity context and pre-retrieval authorization filters; PostgreSQL row-level security as defence in depth.
+- Server-side identity context and physical security-domain partitioning so only authorized partitions participate in ANN retrieval; PostgreSQL row-level security as defence in depth.
 - Idempotent import from the existing JSON long-term memory format, preserving IDs, provenance, versions and status.
 - SDK, REST and MCP contracts that expose stable remember, recall, explain, update, archive/restore, export and health operations.
 - A 50-case minimum labelled retrieval evaluation set, including unanswerable questions.
@@ -54,12 +54,13 @@ In scope:
 - Autonomous memory writes with no provenance, validation or admission gate.
 - Treating model-generated confidence as proof that a statement is true.
 - Supporting every model provider, every vector database and every agent framework in the first commercial release.
-- Building a public hosted multi-tenant SaaS control plane before the self-hosted production baseline is secure and reproducible.
+- Building a public hosted shared multi-tenant SaaS control plane before the self-hosted production baseline is secure and reproducible.
+- Sharing one global HNSW index across mutually isolated customers or users.
 
 ## 5. Product and data principles
 
 1. **Evidence before belief:** source text and provenance are retained; embeddings are derived, disposable indexes.
-2. **Default deny:** identity and access scope are resolved before retrieval. Missing or unverifiable identity must not become a broad search.
+2. **Default deny:** identity and access scope are resolved before retrieval. Missing or unverifiable identity must not become a broad search. ANN candidates are searched only inside physical security domains that match the caller's resolved grants.
 3. **No silent loss:** failed writes, migration errors, capacity limits and corrupt records return explicit errors.
 4. **Versioned change:** records, schemas, embedding profiles and policies are versioned.
 5. **Reversible lifecycle:** archive, restore, supersede and rollback are explicit operations with audit events.
@@ -95,14 +96,14 @@ Every transition is atomic, version-checked, attributable and append-only in the
 
 For every recall request:
 1. Resolve authenticated tenant, subject, roles, scopes and collection restrictions from trusted server context.
-2. Compile and validate an immutable authorization filter.
-3. Apply tenant, owner, collection, status and trust predicates inside the database query and under row-level security **before** nearest-neighbour ranking/return.
+2. Compile an immutable authorization filter and resolve the exact permitted security-domain partitions.
+3. Use partition pruning to search only authorized security domains. Apply tenant, owner, collection, status and trust predicates in SQL, with RLS as defence in depth. Do not rely on a shared global HNSW index plus post-scan WHERE filtering to provide ANN isolation.
 4. Generate the query embedding using the active profile.
 5. Retrieve dense and lexical candidates independently.
 6. Fuse ranks, optionally rerank, explain each score component and pack under a hard token budget.
 7. Return an explicit insufficient-context result when the evidence floor is not met.
 
-The service must fail closed if the repository cannot enforce the required filter. Post-filtering unauthorized rows in Python is not an acceptable security boundary.
+The service must fail closed if the repository cannot prove the authorized partition set is used. pgvector approximate-index filtering can occur after index scanning; a global shared HNSW index can therefore affect filtered recall and performance across tenants even when unauthorized rows are not returned. If a request has finer-grained ACLs than its physical security domain, use an exact filtered scan or deny it. Post-filtering unauthorized rows in Python is not an acceptable security boundary.
 
 A response must include: request ID, query/profile version, retrieved IDs, score breakdown, filter/policy version, selected content references, token estimate, latency breakdown and insufficient-context reason. Raw content is excluded from operational logs unless content tracing has been explicitly enabled.
 
@@ -122,6 +123,7 @@ Proposed targets; these are gates to validate and approve, not claims about curr
 - Recall@10 >= 0.90 on answerable cases.
 - nDCG@10 >= 0.85 on ranked relevance labels.
 - Unauthorized retrievals = 0 in adversarial tenant/owner/collection tests.
+- EXPLAIN-based tests prove only authorized security-domain partitions are scanned for ANN requests.
 - Correct abstention >= 0.95 on unanswerable cases.
 - Every retrieved item has a complete provenance reference and score explanation.
 - No token-budget overflow in the evaluation suite.
@@ -200,6 +202,7 @@ This brief is a proposal, not a signed approval. Before implementation is declar
 - the product scope and non-goals;
 - the proposed release gates;
 - the single active embedding profile per deployment;
+- the security-domain partitioning and exact-search fallback policy;
 - PostgreSQL + pgvector as the production system of record.
 
 Approval record:
