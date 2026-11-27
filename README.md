@@ -5,14 +5,47 @@
 
 **Your AI. Your Memory.** — persistent memory for any AI application.
 
-NanoMemory is a local, file-based **memory engine** for LLM agents: a structured long-term
-store with provenance, automatic memory formation, hybrid retrieval, conflict-aware updates,
-a reversible forgetting lifecycle and a traceable audit trail. Memory belongs to the user, not
+NanoMemory is a **memory engine** for LLM agents: a structured long-term store with provenance,
+automatic memory formation, **vector + BM25 hybrid retrieval**, conflict-aware updates, a
+reversible forgetting lifecycle and a traceable audit trail. Memory belongs to the user, not
 to the model, and it keeps working when no model provider is configured.
 
-> Status: **local single-user engine (v0.2.0)**. Sessions isolate Working Memory *files*, not
-> users; multi-user isolation and SQLite/distributed storage are on the roadmap.
+> Status: **v0.3.0 — vector memory (v2)**. Long-term recall now runs on an embedding-backed
+> SQLite vector store with SQL-level tenant pre-filtering, versioned rollback, per-call traces
+> and a measured eval set. The v1 JSON store remains for Working Memory, episodes and backwards
+> compatibility.
 > Memory content is always treated as untrusted reference data, never as instructions.
+
+## Vector memory in 30 seconds
+
+`bash
+pip install -e .
+nanomemory init
+nanomemory start   # http://127.0.0.1:8000/docs
+
+curl -X POST http://127.0.0.1:8000/api/v1/memory/vectors \
+  -H 'Content-Type: application/json' \
+  -H 'X-NM-Tenant: acme' -H 'X-NM-User: u-1' \
+  -d '{"content":"Order A1001 由顺丰发出，运单号 SF7788990011。","category":"order"}'
+
+curl -X POST http://127.0.0.1:8000/api/v1/memory/vectors/search \
+  -H 'Content-Type: application/json' \
+  -H 'X-NM-Tenant: acme' -H 'X-NM-User: u-1' \
+  -d '{"query":"A1001 的运单号"}'
+`
+
+Every write is embedded, versioned and traced; every search returns per-signal scores, a
+`trace_id` and an explicit `insufficient_context` refusal instead of a plausible guess.
+Tenant scope travels only in a signed header envelope (see `docs/guides/SCOPE_BRIEF.md`).
+
+| Claim | Measured |
+| --- | --- |
+| Recall@5 on the 44-case support eval | **0.871** (lexical subset 0.931, semantic subset 0.000 with the offline hashing provider) |
+| Refusal accuracy on adversarial questions | **1.000** (5/5), stale-memory violations **0** |
+| Local search latency | **1.46 ms mean / 1.93 ms p95** |
+
+Reports: `evals/reports/baseline-hashing.md` · method and limits: `docs/internal/EVALUATION.md`.
+
 
 ## Measured result (mock mode, same dataset)
 
@@ -58,7 +91,10 @@ provider, and `mode=lite` is the default when no key is configured.
 | --- | --- |
 | Memory model | typed memories (`fact / preference / event / procedure / relationship / autobiographical`), provenance, `valid_from`/`valid_until`, `active / superseded / conflict / archived / pending_confirmation` |
 | Formation | automatic extraction → validation → dedupe/conflict → commit, with per-type write rules: a model inference is `pending_confirmation`, never presented as a user fact |
-| Retrieval | hybrid scoring: BM25 + character-trigram semantic + relation expansion + intent weights + reranking, explainable per signal, with an `insufficient_context` fallback |
+| Retrieval (v2) | dense embeddings + BM25 hybrid over a pre-filtered candidate set, intent weights, per-signal scores, calibrated refusal, versioned rollback |
+| Vector store | SQLite + `vec`-free brute-force dot product with model/dimension stamping; SQL pre-filter on tenant, user, ACL, state, category, type, tags and expiry |
+| Tenant scope | HMAC-signed context envelope from the gateway; scope fields rejected in request bodies; production refuses to boot without a signing key |
+| Traces | one row per call: filter, candidate ids, scores, prompt context, latency, tokens, cost, refusal/degradation flags, linked feedback |
 | Lifecycle | retention = importance × utility × recency × confidence; archives (never hard-deletes); stable preferences are protected from decay |
 | Explainability | `explain(memory_id)` returns provenance, supersede chain and the audit events that created or replaced it |
 | SDK / CLI / API / MCP | `from nanomemory import Memory`; `nanomemory init/start/status/remember/recall/explain/lifecycle/doctor`; REST endpoints; MCP tools for DSH |

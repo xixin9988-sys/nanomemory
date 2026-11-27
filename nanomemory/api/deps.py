@@ -24,6 +24,8 @@ from fastapi import Depends, Request
 from nanomemory.core.config import Settings
 from nanomemory.core.errors import ErrorCode, NanoMemoryError
 from nanomemory.core.memory_manager import MemoryManager
+from nanomemory.vector.context import context_from_headers
+from nanomemory.vector.schemas import TenantContext
 
 SESSION_HEADER = "X-NanoMemory-Session-ID"
 RATE_LIMIT_HEADER = "Retry-After"
@@ -52,6 +54,14 @@ def get_session_id(request: Request, manager: ManagerDep) -> str:
 
 
 SessionDep = Annotated[str, Depends(get_session_id)]
+
+
+def get_context(request: Request, manager: ManagerDep) -> TenantContext:
+    """Resolve the signed tenant context (never from body or query)."""
+    return context_from_headers(request.headers, manager.settings)
+
+
+ContextDep = Annotated[TenantContext, Depends(get_context)]
 
 
 def get_request_id(request: Request) -> str:
@@ -163,6 +173,7 @@ def rate_limit_dependency(bucket: str, limit_attr: str):
 
 __all__ = [
     "AdminDep",
+    "ContextDep",
     "ManagerDep",
     "RATE_LIMIT_HEADER",
     "RateLimiter",
@@ -171,6 +182,7 @@ __all__ = [
     "SessionDep",
     "SettingsDep",
     "client_identity",
+    "get_context",
     "get_manager",
     "get_request_id",
     "get_session_id",

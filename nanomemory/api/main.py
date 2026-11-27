@@ -33,6 +33,7 @@ from nanomemory.api.routes import (
     memory,
     metrics,
     sessions,
+    vector,
 )
 from nanomemory.core.config import Settings, get_settings
 from nanomemory.core.errors import ErrorCode
@@ -174,7 +175,14 @@ def create_app(
             allow_headers=[
                 "Content-Type",
                 "Authorization",
+                "Idempotency-Key",
                 "X-NanoMemory-Session-ID",
+                "X-NM-Tenant",
+                "X-NM-User",
+                "X-NM-Roles",
+                "X-NM-Acl",
+                "X-NM-Timestamp",
+                "X-NM-Signature",
                 REQUEST_ID_HEADER,
             ],
         )
@@ -187,6 +195,8 @@ def create_app(
     app.include_router(health.router)
     app.include_router(sessions.router)
     app.include_router(memory.router)
+    app.include_router(vector.router)
+    app.include_router(vector.observability)
     app.include_router(cognitive.router)
     app.include_router(agent.router)
     app.include_router(metrics.router)
@@ -205,6 +215,10 @@ def create_app(
             "worker_count": settings.worker_count,
             "rate_limit_scope": "global" if app.state.rate_limiter.global_valid else "per-process",
             "retry_after_header": RATE_LIMIT_HEADER,
+            "vector_memory": True,
+            "embedding_provider": settings.embedding_provider,
+            "embedding_model": settings.embedding_model,
+            "context_signing": settings.context_signing_key is not None,
         }
 
     return app

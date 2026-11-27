@@ -2,6 +2,33 @@
 
 All notable changes to this project. Dates are ISO-8601.
 
+## [0.3.0] - 2026-11-27
+
+### Added
+
+- **Vector memory (v2)**: embedding provider abstraction (offline hashing + OpenAI-compatible),
+  SQLite vector store with model/dimension stamping, transactional version history and
+  SQL-level pre-filtering on tenant/user/ACL/state/category/type/tags/expiry.
+- **Hybrid retrieval**: dense cosine + BM25 fused with intent weights, per-signal scores,
+  calibrated refusal (`insufficient_context` implies empty evidence), and a degraded
+  lexical-only path when the embedding provider fails.
+- **Lifecycle**: `pending_embedding → active → archived → deleted → rolled_back` with guarded
+  transitions, rollback to any historical version, reactivation, and embedding retry.
+- **Signed tenant context**: HMAC envelope verified before the SQL filter; scope fields are
+  rejected in request bodies; production requires a signing key.
+- **Observability**: one trace row per call (filter, candidate ids, scores, latency, tokens,
+  cost, refusal/degradation) plus trace lookup, feedback and badcase export endpoints.
+- **Evaluation**: 44-case bilingual dataset (29.5% adversarial), `evals/run_eval.py` with
+  Recall@K / MRR / refusal / stale gates, and `evals/calibrate.py` for the refusal floor.
+  Offline baseline: Recall@5 0.871, refusal 1.000, stale violations 0.
+- **Migration**: `scripts/migrate_long_term_to_vector.py` copies v1 records into the vector
+  store without touching `knowledge.json`.
+
+### Changed
+
+- `pyproject.toml` adds `numpy>=1.26`; version 0.3.0.
+- Production settings now require `NANOMEMORY_CONTEXT_SIGNING_KEY`.
+
 ## [Unreleased]
 
 ### Added

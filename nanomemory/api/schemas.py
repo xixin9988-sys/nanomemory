@@ -10,6 +10,7 @@ from nanomemory.core.memory_models import (
     Confidence,
     GoalStatus,
     MemoryStatus,
+    MemoryType,
     SourceKind,
     SourceType,
     TrustLevel,
@@ -153,17 +154,99 @@ class DeleteResponse(BaseModel):
     memory_id: str
 
 
+# --------------------------------------------------------------------------- vector (v2)
+class VectorMetadataRequest(BaseModel):
+    """Metadata patch for an existing vector memory (provenance is immutable)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    category: str | None = Field(default=None, min_length=1, max_length=80)
+    tags: list[str] | None = Field(default=None, max_length=30)
+    memory_type: MemoryType | None = None
+    importance: int | None = Field(default=None, ge=1, le=5)
+    source: str | None = Field(default=None, min_length=1, max_length=500)
+    source_type: SourceType | None = None
+    confidence: Confidence | None = None
+    trust_level: TrustLevel | None = None
+    valid_from: str | None = Field(default=None, max_length=40)
+    valid_until: str | None = Field(default=None, max_length=40)
+    attributes: dict[str, str | int | float | bool | None] | None = None
+
+
+class VectorCreateRequest(BaseModel):
+    """Create payload.  Scope (tenant/user) is deliberately absent and rejected."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    content: str = Field(min_length=1, max_length=20_000)
+    category: str = Field(default="general", min_length=1, max_length=80)
+    tags: list[str] = Field(default_factory=list, max_length=30)
+    memory_type: MemoryType = MemoryType.FACT
+    importance: int = Field(default=3, ge=1, le=5)
+    source: str = Field(default="api", min_length=1, max_length=500)
+    source_type: SourceType = SourceType.USER
+    confidence: Confidence = Confidence.MEDIUM
+    trust_level: TrustLevel = TrustLevel.UNKNOWN
+    valid_from: str | None = Field(default=None, max_length=40)
+    valid_until: str | None = Field(default=None, max_length=40)
+    provenance: ProvenanceInput | None = None
+    attributes: dict[str, str | int | float | bool | None] = Field(default_factory=dict)
+    acl_tags: list[str] = Field(default_factory=list, max_length=50)
+
+
+class VectorUpdateRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    expected_version: int | None = Field(default=None, ge=1)
+    content: str | None = Field(default=None, min_length=1, max_length=20_000)
+    metadata: VectorMetadataRequest | None = None
+    acl_tags: list[str] | None = Field(default=None, max_length=50)
+
+
+class VectorSearchRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    query: str = Field(min_length=1, max_length=4000)
+    limit: int | None = Field(default=None, ge=1, le=50)
+    min_score: float | None = Field(default=None, ge=0.0, le=1.0)
+    categories: list[str] = Field(default_factory=list, max_length=20)
+    memory_types: list[MemoryType] = Field(default_factory=list, max_length=10)
+    tags: list[str] = Field(default_factory=list, max_length=20)
+    include_context: bool = True
+
+
+class VectorRollbackRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    target_version: int = Field(ge=1)
+
+
+class FeedbackRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    trace_id: str = Field(min_length=4, max_length=80)
+    verdict: Literal["up", "down"]
+    reason: str | None = Field(default=None, max_length=80)
+    comment: str | None = Field(default=None, max_length=1000)
+
+
 __all__ = [
     "AgentRunRequest",
     "BackupRequest",
     "CompressRequest",
     "DeleteResponse",
     "EpisodeCreateRequest",
+    "FeedbackRequest",
     "LongTermCreateRequest",
     "LongTermUpdateRequest",
     "ProvenanceInput",
     "QuarantineAcknowledgeRequest",
     "RestoreRequest",
     "SessionCreateResponse",
+    "VectorCreateRequest",
+    "VectorMetadataRequest",
+    "VectorRollbackRequest",
+    "VectorSearchRequest",
+    "VectorUpdateRequest",
     "WorkingMemoryProposalRequest",
 ]

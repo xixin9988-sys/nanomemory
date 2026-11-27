@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "nanomemory"
-version = "0.2.1"
+version = "0.3.0"
 description = "A lightweight, persistent and token-efficient memory engine for AI agents."
 readme = "README.md"
 requires-python = ">=3.11"
@@ -27,6 +27,7 @@ dependencies = [
     "openai>=1.30",
     "filelock>=3.13",
     "httpx>=0.27",
+    "numpy>=1.26",
     "streamlit>=1.35",
 ]
 

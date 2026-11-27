@@ -1,7 +1,11 @@
 # Security model
 
-This is a **local single-user MVP**. It is not hardened for multi-tenant or internet-facing
-deployment, and the documentation says so on purpose.
+This is a **single-node memory service**. Until v0.2 it was a local single-user engine; v0.3
+adds tenant-scoped vector memory with a signed gateway envelope (see §2.1), but it is still not
+an internet-facing multi-tenant SaaS: run it behind the gateway, on a private network, with TLS.
+
+Memory content is untrusted in every version — the tenant boundary controls *who may retrieve a
+row*, never whether the row's text may be treated as an instruction.
 
 ## 1. Trust boundaries
 
@@ -32,6 +36,25 @@ code, never by the payload.
   the generic entropy rule; they can never suppress an explicit credential pattern.
 - Logs are redacted at the handler after formatting, which covers messages, structured
   fields, exception text and third-party loggers. `request_id` is preserved.
+
+## 2.1 Tenant scope (v2 vector memory)
+
+The v1 long-term API filtered by an optional `user_id` in the query string, which is an
+application-level filter. The v2 vector API removes scope from the request entirely:
+
+- `tenant_id` / `user_id` appear in **no** request body or query parameter; request models set
+  `extra="forbid"`, so a client that tries to send them gets 422.
+- Scope arrives only in an HMAC-SHA256 envelope (`X-NM-Tenant`, `X-NM-User`, `X-NM-Roles`,
+  `X-NM-Acl`, `X-NM-Timestamp`, `X-NM-Signature`) produced by the gateway that shares
+  `NANOMEMORY_CONTEXT_SIGNING_KEY`. Timestamps older than
+  `NANOMEMORY_CONTEXT_SIGNING_MAX_AGE_SECONDS` are rejected (replay window).
+- The store builds its SQL `WHERE` clause from that verified context **before** any similarity
+  computation; there is no "fetch top-K then filter" path.
+- `environment=production` refuses to start without a signing key, and a missing signature is a
+  401 rather than a default tenant.
+
+Residual risk: the shared key is a bearer secret between two services. Rotate it, keep the
+NanoMemory port private, and never expose it to browser clients.
 
 ## 3. Filesystem
 

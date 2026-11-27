@@ -61,6 +61,8 @@ from nanomemory.core.tools import ToolContext, ToolRegistry, build_default_regis
 from nanomemory.core.working_memory import UpdateResult, WorkingMemoryStore
 from nanomemory.providers.base import BaseProvider
 from nanomemory.providers.mock_provider import MockProvider
+from nanomemory.vector.schemas import MemoryMetadata
+from nanomemory.vector.service import NewMemory, VectorMemoryService
 
 
 @dataclass(slots=True)
@@ -124,6 +126,11 @@ class MemoryManager:
         self.context_builder = ContextBuilder(self.settings, counter=self.counter)
         self.compressor = MemoryCompressor(self.settings, counter=self.counter)
         self.formation = MemoryFormation(self.settings, self.long_term)
+
+        # Vector memory (v2).  It is initialised by initialize_storage(); a failure there
+        # degrades only the vector API (health and the v1 stores keep working).
+        self.vector = VectorMemoryService(self.settings)
+        self.vector_error: str | None = None
 
         self.provider_error: str | None = None
         if provider is not None:
@@ -193,6 +200,7 @@ class MemoryManager:
             (self.settings.locks_dir, "locks directory"),
             (self.settings.health_dir, "health directory"),
             (self.settings.migrations_dir, "migrations directory"),
+            (self.settings.vector_dir, "vector directory"),
         ):
             if not directory.exists():
                 ensure_dir(directory, root=self.settings.storage_root, label=label)
@@ -200,6 +208,15 @@ class MemoryManager:
         self.long_term.ensure_storage()
         self.episodic.ensure_storage()
         self.metrics.ensure_storage()
+        try:
+            self.vector.ensure_ready()
+            self.vector_error = None
+        except NanoMemoryError as exc:
+            self.vector_error = exc.code.value
+            self.log.warning(
+                "vector_memory_unavailable",
+                extra={"event": "vector_memory_unavailable", "code": exc.code.value},
+            )
         self.registry.ensure_default()
         self.working.ensure_session(self.settings.default_session_id)
         report.schema_versions = dict(self.migrations.current_versions())
@@ -254,6 +271,35 @@ class MemoryManager:
 
     def list_sessions(self) -> list[str]:
         return self.registry.list_sessions()
+
+    # ------------------------------------------------------------------ vector memory
+    def require_vector(self) -> VectorMemoryService:
+        """Return the vector service or a typed 503 when it failed to initialise."""
+        if self.vector_error is not None:
+            raise NanoMemoryError(
+                code=ErrorCode.SERVICE_UNAVAILABLE,
+                message="Vector memory is unavailable in this process.",
+                details={"reason": self.vector_error},
+            )
+        self.vector.ensure_ready()
+        return self.vector
+
+    def new_vector_memory(
+        self,
+        *,
+        content: str,
+        metadata: MemoryMetadata,
+        acl_tags: tuple[str, ...] = (),
+    ) -> NewMemory:
+        return NewMemory(content=content, metadata=metadata, acl_tags=acl_tags)
+
+    def vector_global_stats(self) -> dict[str, Any]:
+        if self.vector_error is not None:
+            return {"available": False, "error": self.vector_error}
+        try:
+            return {"available": True, **self.vector.store.global_stats()}
+        except NanoMemoryError as exc:  # pragma: no cover - defensive
+            return {"available": False, "error": exc.code.value}
 
     # ------------------------------------------------------------------ guards
     def check_maintenance(self) -> None:
@@ -578,7 +624,14 @@ class MemoryManager:
     def health_dict(self) -> dict[str, Any]:
         report = self.health.check()
         startup = self.startup_report.as_dict() if self.startup_report else None
-        extra: dict[str, Any] = {"startup_recovery": startup}
+        extra: dict[str, Any] = {
+            "startup_recovery": startup,
+            "vector_memory": {
+                "available": self.vector_error is None,
+                "backend": "sqlite",
+                "error": self.vector_error,
+            },
+        }
         return health_payload(self.settings, report, extra=extra)
 
     def get_memory_statistics(self) -> dict[str, Any]:
@@ -614,6 +667,7 @@ class MemoryManager:
                 "error": self.provider_error,
             },
             "startup_recovery": self.startup_report.as_dict() if self.startup_report else None,
+            "vector_memory": self.vector_global_stats(),
         }
 
     def export_snapshot(self) -> dict[str, Any]:
@@ -641,6 +695,7 @@ class MemoryManager:
 
     async def aclose(self) -> None:
         await self.agent.aclose()
+        self.vector.close()
 
 
 def build_manager(settings: Settings | None = None) -> MemoryManager:

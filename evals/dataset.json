@@ -1,0 +1,743 @@
+{
+  "version": 1,
+  "name": "nanomemory-support-v1",
+  "description": "Customer-support memory eval: 44 cases over 24 memories; 13 adversarial (5 refusal, 1 stale, 7 answer-grounding) = 29.5%.",
+  "corpus": [
+    {
+      "key": "m-dark-mode",
+      "content": "用户偏好深色模式与 16px 大字号，并希望关闭界面动画。",
+      "category": "preference",
+      "tags": [
+        "ui",
+        "accessibility"
+      ],
+      "memory_type": "preference"
+    },
+    {
+      "key": "m-language",
+      "content": "用户要求所有邮件与短信使用简体中文发送。",
+      "category": "preference",
+      "tags": [
+        "communication"
+      ],
+      "memory_type": "preference"
+    },
+    {
+      "key": "m-timezone",
+      "content": "用户时区为 Asia/Shanghai（UTC+8），希望在 9:00-18:00 之间接受客服回访。",
+      "category": "preference",
+      "tags": [
+        "contact"
+      ],
+      "memory_type": "fact"
+    },
+    {
+      "key": "m-order-a1001",
+      "content": "Order A1001 于 2026-10-01 由顺丰快递发出，运单号 SF7788990011，客户已签收。",
+      "category": "order",
+      "tags": [
+        "logistics"
+      ],
+      "memory_type": "event"
+    },
+    {
+      "key": "m-order-b2044",
+      "content": "Order B2044 包含 2 件商品，2026-10-12 从上海仓发出，预计 10-15 送达。",
+      "category": "order",
+      "tags": [
+        "logistics"
+      ],
+      "memory_type": "event"
+    },
+    {
+      "key": "m-refund-policy",
+      "content": "退款政策：签收后 7 天内可无理由退款；定制商品与已拆封的耳机不支持无理由退款。",
+      "category": "policy",
+      "tags": [
+        "refund"
+      ],
+      "memory_type": "procedure"
+    },
+    {
+      "key": "m-refund-r1001",
+      "content": "Refund R1001 于 2026-10-05 提交，原因是商品破损，金额 199 元，已通过审核，等待财务打款。",
+      "category": "refund",
+      "tags": [
+        "refund"
+      ],
+      "memory_type": "event"
+    },
+    {
+      "key": "m-refund-r1002",
+      "content": "Refund R1002 被拒绝：申请超过 30 天，且商品已拆封，不符合退款政策。",
+      "category": "refund",
+      "tags": [
+        "refund"
+      ],
+      "memory_type": "event"
+    },
+    {
+      "key": "m-shipping-fee",
+      "content": "满 99 元包邮；新疆、西藏等偏远地区需加收 15 元运费。",
+      "category": "policy",
+      "tags": [
+        "shipping"
+      ],
+      "memory_type": "procedure"
+    },
+    {
+      "key": "m-warranty",
+      "content": "耳机类商品保修 12 个月，非人为损坏可免费换新。",
+      "category": "policy",
+      "tags": [
+        "warranty"
+      ],
+      "memory_type": "procedure"
+    },
+    {
+      "key": "m-return-address",
+      "content": "退货地址：上海市浦东新区张江路 88 号 3 号楼 2 层，收件人：售后组。",
+      "category": "policy",
+      "tags": [
+        "return"
+      ],
+      "memory_type": "fact"
+    },
+    {
+      "key": "m-escalation",
+      "content": "退款金额超过 500 元必须由主管人工审批，不能自动通过。",
+      "category": "policy",
+      "tags": [
+        "refund",
+        "approval"
+      ],
+      "memory_type": "procedure"
+    },
+    {
+      "key": "m-complaint-1",
+      "content": "客户投诉 2026-10-08 客服等待时间超过 20 分钟，已致歉并补偿 20 元优惠券。",
+      "category": "complaint",
+      "tags": [
+        "service"
+      ],
+      "memory_type": "event"
+    },
+    {
+      "key": "m-vip",
+      "content": "该客户为 VIP 金卡会员，享受优先客服与免费退换货。",
+      "category": "customer",
+      "tags": [
+        "loyalty"
+      ],
+      "memory_type": "fact"
+    },
+    {
+      "key": "m-invoice",
+      "content": "需要开具增值税专用发票，抬头为上海示例科技有限公司。",
+      "category": "invoice",
+      "tags": [
+        "billing"
+      ],
+      "memory_type": "fact"
+    },
+    {
+      "key": "m-product-x1",
+      "content": "商品 X1 为无线降噪耳机，售价 899 元，颜色有黑、白两种。",
+      "category": "product",
+      "tags": [
+        "catalog"
+      ],
+      "memory_type": "fact"
+    },
+    {
+      "key": "m-product-y2",
+      "content": "商品 Y2 为机械键盘，售价 459 元，支持 7 天无理由退货。",
+      "category": "product",
+      "tags": [
+        "catalog"
+      ],
+      "memory_type": "fact"
+    },
+    {
+      "key": "m-promo-101",
+      "content": "双十一活动：满 300 减 50，活动时间 2026-11-01 至 2026-11-11。",
+      "category": "promotion",
+      "tags": [
+        "promo"
+      ],
+      "memory_type": "event"
+    },
+    {
+      "key": "m-payment",
+      "content": "支持微信、支付宝与银联卡支付；不支持货到付款。",
+      "category": "policy",
+      "tags": [
+        "payment"
+      ],
+      "memory_type": "procedure"
+    },
+    {
+      "key": "m-cancel",
+      "content": "订单发货前可免费取消；发货后取消需拒收并承担往返运费。",
+      "category": "policy",
+      "tags": [
+        "cancel"
+      ],
+      "memory_type": "procedure"
+    },
+    {
+      "key": "m-address-change",
+      "content": "发货前可修改收货地址；发货后只能联系快递改派。",
+      "category": "policy",
+      "tags": [
+        "logistics"
+      ],
+      "memory_type": "procedure"
+    },
+    {
+      "key": "m-sla",
+      "content": "首次响应时间承诺 2 小时内，复杂问题 24 小时内给出方案。",
+      "category": "policy",
+      "tags": [
+        "service"
+      ],
+      "memory_type": "procedure"
+    },
+    {
+      "key": "m-old-refund",
+      "content": "旧政策：2025 年退款期限为 15 天。",
+      "category": "policy",
+      "tags": [
+        "refund"
+      ],
+      "memory_type": "procedure",
+      "state": "archived"
+    },
+    {
+      "key": "m-contact-phone",
+      "content": "客户联系电话 138-0000-1234，仅在物流异常时联系。",
+      "category": "customer",
+      "tags": [
+        "contact"
+      ],
+      "memory_type": "fact"
+    }
+  ],
+  "cases": [
+    {
+      "id": "c01",
+      "query": "我的显示偏好是什么？",
+      "type": "recall",
+      "expected_memory_ids": [
+        "m-dark-mode"
+      ],
+      "forbidden_memory_ids": [],
+      "expected_behaviour": "answer",
+      "requires": "lexical",
+      "notes": "直接偏好查询"
+    },
+    {
+      "id": "c02",
+      "query": "界面字号和动画设置",
+      "type": "recall",
+      "expected_memory_ids": [
+        "m-dark-mode"
+      ],
+      "forbidden_memory_ids": [],
+      "expected_behaviour": "answer",
+      "requires": "lexical",
+      "notes": "偏好细节"
+    },
+    {
+      "id": "c03",
+      "query": "应该用什么语言给客户发邮件？",
+      "type": "recall",
+      "expected_memory_ids": [
+        "m-language"
+      ],
+      "forbidden_memory_ids": [],
+      "expected_behaviour": "answer",
+      "requires": "lexical",
+      "notes": "沟通偏好"
+    },
+    {
+      "id": "c04",
+      "query": "客户在哪个时区，什么时候方便联系？",
+      "type": "recall",
+      "expected_memory_ids": [
+        "m-timezone"
+      ],
+      "forbidden_memory_ids": [],
+      "expected_behaviour": "answer",
+      "requires": "lexical",
+      "notes": "联系时间"
+    },
+    {
+      "id": "c05",
+      "query": "Order A1001 的运单号是多少？",
+      "type": "recall",
+      "expected_memory_ids": [
+        "m-order-a1001"
+      ],
+      "forbidden_memory_ids": [],
+      "expected_behaviour": "answer",
+      "requires": "lexical",
+      "notes": "订单标识符"
+    },
+    {
+      "id": "c06",
+      "query": "A1001 什么时候签收的？",
+      "type": "recall",
+      "expected_memory_ids": [
+        "m-order-a1001"
+      ],
+      "forbidden_memory_ids": [],
+      "expected_behaviour": "answer",
+      "requires": "lexical",
+      "notes": "订单时间"
+    },
+    {
+      "id": "c07",
+      "query": "B2044 从哪个仓库发出？",
+      "type": "recall",
+      "expected_memory_ids": [
+        "m-order-b2044"
+      ],
+      "forbidden_memory_ids": [],
+      "expected_behaviour": "answer",
+      "requires": "lexical",
+      "notes": "仓库"
+    },
+    {
+      "id": "c08",
+      "query": "签收后几天内可以无理由退款？",
+      "type": "recall",
+      "expected_memory_ids": [
+        "m-refund-policy"
+      ],
+      "forbidden_memory_ids": [
+        "m-old-refund"
+      ],
+      "expected_behaviour": "answer",
+      "requires": "lexical",
+      "notes": "当前退款政策；不得引用旧政策"
+    },
+    {
+      "id": "c09",
+      "query": "哪些商品不支持无理由退款？",
+      "type": "recall",
+      "expected_memory_ids": [
+        "m-refund-policy"
+      ],
+      "forbidden_memory_ids": [],
+      "expected_behaviour": "answer",
+      "requires": "lexical",
+      "notes": "退款例外"
+    },
+    {
+      "id": "c10",
+      "query": "Refund R1001 现在是什么状态？",
+      "type": "recall",
+      "expected_memory_ids": [
+        "m-refund-r1001"
+      ],
+      "forbidden_memory_ids": [],
+      "expected_behaviour": "answer",
+      "requires": "lexical",
+      "notes": "退款状态"
+    },
+    {
+      "id": "c11",
+      "query": "R1002 为什么被拒绝？",
+      "type": "recall",
+      "expected_memory_ids": [
+        "m-refund-r1002"
+      ],
+      "forbidden_memory_ids": [],
+      "expected_behaviour": "answer",
+      "requires": "lexical",
+      "notes": "拒绝原因（防止幻觉为通过）"
+    },
+    {
+      "id": "c12",
+      "query": "新疆的运费怎么算？",
+      "type": "recall",
+      "expected_memory_ids": [
+        "m-shipping-fee"
+      ],
+      "forbidden_memory_ids": [],
+      "expected_behaviour": "answer",
+      "requires": "lexical",
+      "notes": "偏远地区运费"
+    },
+    {
+      "id": "c13",
+      "query": "多少钱可以包邮？",
+      "type": "recall",
+      "expected_memory_ids": [
+        "m-shipping-fee"
+      ],
+      "forbidden_memory_ids": [],
+      "expected_behaviour": "answer",
+      "requires": "lexical",
+      "notes": "包邮门槛"
+    },
+    {
+      "id": "c14",
+      "query": "耳机保修多久？",
+      "type": "recall",
+      "expected_memory_ids": [
+        "m-warranty"
+      ],
+      "forbidden_memory_ids": [],
+      "expected_behaviour": "answer",
+      "requires": "lexical",
+      "notes": "保修期"
+    },
+    {
+      "id": "c15",
+      "query": "退货寄到哪里？",
+      "type": "recall",
+      "expected_memory_ids": [
+        "m-return-address"
+      ],
+      "forbidden_memory_ids": [],
+      "expected_behaviour": "answer",
+      "requires": "lexical",
+      "notes": "退货地址"
+    },
+    {
+      "id": "c16",
+      "query": "退款金额很大时谁来审批？",
+      "type": "recall",
+      "expected_memory_ids": [
+        "m-escalation"
+      ],
+      "forbidden_memory_ids": [],
+      "expected_behaviour": "answer",
+      "requires": "lexical",
+      "notes": "审批规则"
+    },
+    {
+      "id": "c17",
+      "query": "超过 500 元的退款能自动通过吗？",
+      "type": "recall",
+      "expected_memory_ids": [
+        "m-escalation"
+      ],
+      "forbidden_memory_ids": [],
+      "expected_behaviour": "answer",
+      "requires": "lexical",
+      "notes": "审批边界"
+    },
+    {
+      "id": "c18",
+      "query": "客户投诉过什么问题？",
+      "type": "recall",
+      "expected_memory_ids": [
+        "m-complaint-1"
+      ],
+      "forbidden_memory_ids": [],
+      "expected_behaviour": "answer",
+      "requires": "lexical",
+      "notes": "投诉记录"
+    },
+    {
+      "id": "c19",
+      "query": "这位客户是金卡会员吗？",
+      "type": "recall",
+      "expected_memory_ids": [
+        "m-vip"
+      ],
+      "forbidden_memory_ids": [],
+      "expected_behaviour": "answer",
+      "requires": "lexical",
+      "notes": "会员等级"
+    },
+    {
+      "id": "c20",
+      "query": "发票抬头写什么？",
+      "type": "recall",
+      "expected_memory_ids": [
+        "m-invoice"
+      ],
+      "forbidden_memory_ids": [],
+      "expected_behaviour": "answer",
+      "requires": "lexical",
+      "notes": "发票信息"
+    },
+    {
+      "id": "c21",
+      "query": "X1 耳机多少钱？",
+      "type": "recall",
+      "expected_memory_ids": [
+        "m-product-x1"
+      ],
+      "forbidden_memory_ids": [],
+      "expected_behaviour": "answer",
+      "requires": "lexical",
+      "notes": "商品价格"
+    },
+    {
+      "id": "c22",
+      "query": "双十一满减活动什么时候结束？",
+      "type": "recall",
+      "expected_memory_ids": [
+        "m-promo-101"
+      ],
+      "forbidden_memory_ids": [],
+      "expected_behaviour": "answer",
+      "requires": "lexical",
+      "notes": "活动时间"
+    },
+    {
+      "id": "c23",
+      "query": "可以货到付款吗？",
+      "type": "recall",
+      "expected_memory_ids": [
+        "m-payment"
+      ],
+      "forbidden_memory_ids": [],
+      "expected_behaviour": "answer",
+      "requires": "lexical",
+      "notes": "支付方式"
+    },
+    {
+      "id": "c24",
+      "query": "发货后还能取消订单吗？",
+      "type": "recall",
+      "expected_memory_ids": [
+        "m-cancel"
+      ],
+      "forbidden_memory_ids": [],
+      "expected_behaviour": "answer",
+      "requires": "lexical",
+      "notes": "取消规则"
+    },
+    {
+      "id": "c25",
+      "query": "发货后地址还能改吗？",
+      "type": "recall",
+      "expected_memory_ids": [
+        "m-address-change"
+      ],
+      "forbidden_memory_ids": [],
+      "expected_behaviour": "answer",
+      "requires": "lexical",
+      "notes": "地址修改"
+    },
+    {
+      "id": "c26",
+      "query": "你们的响应时间承诺是多少？",
+      "type": "recall",
+      "expected_memory_ids": [
+        "m-sla"
+      ],
+      "forbidden_memory_ids": [],
+      "expected_behaviour": "answer",
+      "requires": "lexical",
+      "notes": "SLA"
+    },
+    {
+      "id": "c27",
+      "query": "我的蓝牙耳塞有质量问题，怎么办？",
+      "type": "recall",
+      "expected_memory_ids": [
+        "m-warranty"
+      ],
+      "forbidden_memory_ids": [],
+      "expected_behaviour": "answer",
+      "requires": "semantic",
+      "notes": "语义改写：耳塞→耳机，需向量泛化"
+    },
+    {
+      "id": "c28",
+      "query": "包裹一直没到，能查一下物流吗？",
+      "type": "recall",
+      "expected_memory_ids": [
+        "m-order-a1001",
+        "m-order-b2044"
+      ],
+      "forbidden_memory_ids": [],
+      "expected_behaviour": "answer",
+      "requires": "semantic",
+      "notes": "语义改写：无订单号"
+    },
+    {
+      "id": "c29",
+      "query": "这个键盘能退吗？",
+      "type": "recall",
+      "expected_memory_ids": [
+        "m-product-y2"
+      ],
+      "forbidden_memory_ids": [],
+      "expected_behaviour": "answer",
+      "requires": "lexical",
+      "notes": "商品退货"
+    },
+    {
+      "id": "c30",
+      "query": "退款多久能到账？",
+      "type": "recall",
+      "expected_memory_ids": [
+        "m-refund-r1001"
+      ],
+      "forbidden_memory_ids": [],
+      "expected_behaviour": "answer",
+      "requires": "lexical",
+      "notes": "grounded unknown: corpus records the status but not an arrival date"
+    },
+    {
+      "id": "c31",
+      "query": "Order C9999 的物流状态？",
+      "type": "grounding",
+      "expected_memory_ids": [],
+      "forbidden_memory_ids": [],
+      "expected_behaviour": "refuse",
+      "requires": "lexical",
+      "notes": "订单不存在 | retrieval returns the topical memory; the answer layer must not fabricate the missing entity"
+    },
+    {
+      "id": "c32",
+      "query": "你们在上海有实体店吗？",
+      "type": "refusal",
+      "expected_memory_ids": [],
+      "forbidden_memory_ids": [],
+      "expected_behaviour": "refuse",
+      "requires": "lexical",
+      "notes": "语料没有门店信息"
+    },
+    {
+      "id": "c33",
+      "query": "2025 年的退款期限是多久？",
+      "type": "stale",
+      "expected_memory_ids": [],
+      "forbidden_memory_ids": [
+        "m-old-refund"
+      ],
+      "expected_behaviour": "refuse",
+      "requires": "lexical",
+      "notes": "archived 2025 policy must never be served as current"
+    },
+    {
+      "id": "c34",
+      "query": "CEO 的邮箱是什么？",
+      "type": "refusal",
+      "expected_memory_ids": [],
+      "forbidden_memory_ids": [],
+      "expected_behaviour": "refuse",
+      "requires": "lexical",
+      "notes": "语料没有高管联系方式"
+    },
+    {
+      "id": "c35",
+      "query": "能不能用比特币付款？",
+      "type": "refusal",
+      "expected_memory_ids": [],
+      "forbidden_memory_ids": [],
+      "expected_behaviour": "refuse",
+      "requires": "lexical",
+      "notes": "支付方式之外的问题"
+    },
+    {
+      "id": "c36",
+      "query": "商品 Z9 的库存还有多少？",
+      "type": "grounding",
+      "expected_memory_ids": [],
+      "forbidden_memory_ids": [],
+      "expected_behaviour": "refuse",
+      "requires": "lexical",
+      "notes": "商品不存在 | retrieval returns the topical memory; the answer layer must not fabricate the missing entity"
+    },
+    {
+      "id": "c37",
+      "query": "退款 R1001 具体哪天到账？",
+      "type": "recall",
+      "expected_memory_ids": [
+        "m-refund-r1001"
+      ],
+      "forbidden_memory_ids": [],
+      "expected_behaviour": "answer",
+      "requires": "lexical",
+      "notes": "grounded unknown: no date is stated; the answer must say so"
+    },
+    {
+      "id": "c38",
+      "query": "客服电话是多少？",
+      "type": "grounding",
+      "expected_memory_ids": [],
+      "forbidden_memory_ids": [
+        "m-contact-phone"
+      ],
+      "expected_behaviour": "refuse",
+      "requires": "lexical",
+      "notes": "entity confusion: the customer phone is not the support line | answer-level guard: the retrieved entity is similar but not the asked one"
+    },
+    {
+      "id": "c39",
+      "query": "下个月的促销计划是什么？",
+      "type": "grounding",
+      "expected_memory_ids": [],
+      "forbidden_memory_ids": [
+        "m-promo-101"
+      ],
+      "expected_behaviour": "refuse",
+      "requires": "lexical",
+      "notes": "only the 11.11 promo exists; next month is not covered | answer-level guard: the retrieved entity is similar but not the asked one"
+    },
+    {
+      "id": "c40",
+      "query": "这个客户的收货地址在哪里？",
+      "type": "grounding",
+      "expected_memory_ids": [],
+      "forbidden_memory_ids": [
+        "m-return-address"
+      ],
+      "expected_behaviour": "refuse",
+      "requires": "lexical",
+      "notes": "entity confusion: return address is not the customer shipping address | answer-level guard: the retrieved entity is similar but not the asked one"
+    },
+    {
+      "id": "c41",
+      "query": "Apple Watch 的保修政策是什么？",
+      "type": "refusal",
+      "expected_memory_ids": [],
+      "forbidden_memory_ids": [],
+      "expected_behaviour": "refuse",
+      "requires": "lexical",
+      "notes": "product not in corpus"
+    },
+    {
+      "id": "c42",
+      "query": "你们在成都有仓库吗？",
+      "type": "refusal",
+      "expected_memory_ids": [],
+      "forbidden_memory_ids": [],
+      "expected_behaviour": "refuse",
+      "requires": "lexical",
+      "notes": "only the Shanghai warehouse exists"
+    },
+    {
+      "id": "c43",
+      "query": "会员积分怎么兑换？",
+      "type": "grounding",
+      "expected_memory_ids": [],
+      "forbidden_memory_ids": [],
+      "expected_behaviour": "refuse",
+      "requires": "lexical",
+      "notes": "no loyalty-points programme in corpus | retrieval returns the topical memory; the answer layer must not fabricate the missing entity"
+    },
+    {
+      "id": "c44",
+      "query": "双十二活动的优惠力度是多少？",
+      "type": "grounding",
+      "expected_memory_ids": [],
+      "forbidden_memory_ids": [
+        "m-promo-101"
+      ],
+      "expected_behaviour": "refuse",
+      "requires": "lexical",
+      "notes": "11.11 promo must not be presented as 12.12 | answer-level guard: the retrieved entity is similar but not the asked one"
+    }
+  ]
+}

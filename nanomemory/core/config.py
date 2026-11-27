@@ -96,6 +96,37 @@ class Settings(BaseSettings):
     long_term_capacity_limit: int = 5000
     long_term_tag_overlap_threshold: int = 1
 
+    # ------------------------------------------------------------------ vector memory (v2)
+    embedding_provider: Literal["hashing", "openai_compatible"] = "hashing"
+    """hashing is the offline default (lexical only); openai_compatible is the production path."""
+
+    embedding_model: str = "text-embedding-3-small"
+    embedding_dimension: int = 384
+    embedding_api_key: SecretStr | None = None
+    embedding_base_url: str | None = None
+    embedding_batch_size: int = 32
+    embedding_timeout_seconds: float = 20.0
+    embedding_max_retries: int = 2
+    embedding_cache_entries: int = 2048
+    embedding_cost_per_1k_tokens: float = 0.0
+    """USD per 1k embedding tokens; 0 means "not priced" and cost is reported as 0."""
+
+    vector_database: Path | None = None
+    """SQLite file for memories/traces.  Defaults to <storage_root>/vector/vectors.db."""
+
+    vector_search_limit: int = 8
+    vector_candidate_limit: int = 5000
+    vector_content_floor: float = 0.10
+    """Below this best content signal the API answers insufficient_context instead of guessing."""
+
+    vector_min_result_score: float = 0.22
+    vector_trace_context_chars: int = 4000
+    badcase_export_file: Path | None = None
+    context_signing_key: SecretStr | None = None
+    """Shared secret with the gateway (mem-guard).  Required in production."""
+
+    context_signing_max_age_seconds: int = 300
+
     # ------------------------------------------------------------------ metrics
     metrics_enabled: bool = True
     metrics_max_bytes: int = 10 * 1024 * 1024
@@ -141,7 +172,13 @@ class Settings(BaseSettings):
     "currency": "USD"}}``.  Empty means "no prices configured" -> cost is N/A."""
 
     # ------------------------------------------------------------------ validators
-    @field_validator("storage_root", "read_tool_allowed_root", mode="after")
+    @field_validator(
+        "storage_root",
+        "read_tool_allowed_root",
+        "vector_database",
+        "badcase_export_file",
+        mode="after",
+    )
     @classmethod
     def _resolve_root(cls, value: Path | None) -> Path | None:
         if value is None:
@@ -187,6 +224,21 @@ class Settings(BaseSettings):
             raise ValueError("lock_timeout_seconds must be > 0")
         if self.long_term_capacity_limit < 1:
             raise ValueError("long_term_capacity_limit must be >= 1")
+        if not 0.0 <= self.vector_content_floor <= 1.0:
+            raise ValueError("vector_content_floor must be between 0 and 1")
+        if not 0.0 <= self.vector_min_result_score <= 1.0:
+            raise ValueError("vector_min_result_score must be between 0 and 1")
+        if self.vector_search_limit < 1:
+            raise ValueError("vector_search_limit must be >= 1")
+        if self.embedding_dimension < 32:
+            raise ValueError("embedding_dimension must be >= 32")
+        if self.context_signing_max_age_seconds < 1:
+            raise ValueError("context_signing_max_age_seconds must be >= 1")
+        if self.environment == "production" and self.context_signing_key is None:
+            # Fail closed: an unsigned production deployment cannot prove tenant scope.
+            raise ValueError(
+                "NANOMEMORY_CONTEXT_SIGNING_KEY is required when environment=production"
+            )
         return self
 
     # ------------------------------------------------------------------ derived
@@ -225,6 +277,18 @@ class Settings(BaseSettings):
     @property
     def maintenance_marker(self) -> Path:
         return self.storage_root / ".maintenance.json"
+
+    @property
+    def vector_dir(self) -> Path:
+        return self.storage_root / "vector"
+
+    @property
+    def vector_database_path(self) -> Path:
+        return self.vector_database or (self.vector_dir / "vectors.db")
+
+    @property
+    def badcase_export_path(self) -> Path:
+        return self.badcase_export_file or (self.vector_dir / "evals" / "badcases.jsonl")
 
     @property
     def memory_token_limit(self) -> int:
@@ -271,6 +335,13 @@ class Settings(BaseSettings):
             "metrics_enabled": self.metrics_enabled,
             "admin_operations_enabled": self.admin_token is not None,
             "worker_count": self.worker_count,
+            "embedding_provider": self.embedding_provider,
+            "embedding_model": self.embedding_model,
+            "embedding_dimension": self.embedding_dimension,
+            "vector_backend": "sqlite",
+            "vector_search_limit": self.vector_search_limit,
+            "vector_content_floor": self.vector_content_floor,
+            "context_signing_enabled": self.context_signing_key is not None,
         }
 
 

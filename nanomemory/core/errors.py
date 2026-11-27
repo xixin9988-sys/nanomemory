@@ -91,6 +91,16 @@ class ErrorCode(StrEnum):
     RESTORE_CONFIRMATION_REQUIRED = "restore_confirmation_required"
     MIGRATION_FAILED = "migration_failed"
 
+    # Vector memory (v2)
+    EMBEDDING_FAILED = "embedding_failed"
+    EMBEDDING_DIMENSION_MISMATCH = "embedding_dimension_mismatch"
+    VECTOR_STORE_UNAVAILABLE = "vector_store_unavailable"
+    INVALID_STATE_TRANSITION = "invalid_state_transition"
+    CONTEXT_SIGNATURE_INVALID = "context_signature_invalid"
+    CONTEXT_REQUIRED = "context_required"
+    TENANT_SCOPE_VIOLATION = "tenant_scope_violation"
+    IDEMPOTENCY_CONFLICT = "idempotency_conflict"
+
     # Infrastructure
     RATE_LIMIT_EXCEEDED = "rate_limit_exceeded"
     SERVICE_DEGRADED = "service_degraded"
@@ -153,6 +163,14 @@ HTTP_STATUS: dict[ErrorCode, int] = {
     ErrorCode.RESTORE_FAILED: 500,
     ErrorCode.RESTORE_CONFIRMATION_REQUIRED: 400,
     ErrorCode.MIGRATION_FAILED: 500,
+    ErrorCode.EMBEDDING_FAILED: 503,
+    ErrorCode.EMBEDDING_DIMENSION_MISMATCH: 422,
+    ErrorCode.VECTOR_STORE_UNAVAILABLE: 503,
+    ErrorCode.INVALID_STATE_TRANSITION: 409,
+    ErrorCode.CONTEXT_SIGNATURE_INVALID: 401,
+    ErrorCode.CONTEXT_REQUIRED: 401,
+    ErrorCode.TENANT_SCOPE_VIOLATION: 403,
+    ErrorCode.IDEMPOTENCY_CONFLICT: 409,
     ErrorCode.RATE_LIMIT_EXCEEDED: 429,
     ErrorCode.SERVICE_DEGRADED: 503,
     ErrorCode.SERVICE_UNAVAILABLE: 503,
