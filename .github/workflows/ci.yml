@@ -28,7 +28,10 @@ jobs:
         with:
           python-version: "3.11"
       - run: pip install -e ".[dev]"
-      - run: pytest -q
+      - run: pytest -q --junitxml=junit.xml
+      - name: Report failures as annotations
+        if: failure()
+        run: python scripts/ci_junit_annotations.py junit.xml
 
   test-py312:
     name: tests (py3.12)
@@ -39,7 +42,10 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install -e ".[dev]"
-      - run: pytest -q
+      - run: pytest -q --junitxml=junit.xml
+      - name: Report failures as annotations
+        if: failure()
+        run: python scripts/ci_junit_annotations.py junit.xml
 
   contract:
     name: repository contract (blocking)
