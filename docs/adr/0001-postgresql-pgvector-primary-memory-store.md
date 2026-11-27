@@ -30,6 +30,7 @@ Use one active embedding profile and dimension per deployment for v1. Store the 
 ### memory_records
 - id (UUID or stable legacy ID)
 - tenant_id
+- security_domain_id (physical ANN isolation boundary: personal scope or shared collection/workspace scope)
 - owner_user_id
 - session_id (nullable)
 - collection_id
@@ -49,7 +50,8 @@ Use one active embedding profile and dimension per deployment for v1. Store the 
 ### memory_embeddings
 - id
 - memory_id (FK)
-- tenant_id (for RLS and index filtering)
+- tenant_id (for RLS and partition pruning)
+- security_domain_id (same partition key as the canonical record)
 - embedding_profile_id
 - embedding_model
 - embedding_revision
@@ -66,21 +68,30 @@ Use one active embedding profile and dimension per deployment for v1. Store the 
 ### embedding_profiles
 - profile ID, provider, model, revision, dimension, normalization, distance metric, tokenizer / preprocessing version, active flag and creation date.
 
-The concrete physical schema and indexes must be validated against the chosen pgvector version before implementation. Keep vector DDL behind an adapter so the pure domain layer does not import SQLAlchemy or pgvector classes.
+The concrete physical schema and indexes must be validated against the chosen pgvector version before implementation. Current pgvector documents HNSW support for vector up to 2,000 dimensions and halfvec up to 4,000 dimensions; validate the selected provider dimension and index operator class at startup/migration time. Keep vector DDL behind an adapter so the pure domain layer does not import SQLAlchemy or pgvector classes.
+
+## Security-domain partitioning
+
+For v1, use PostgreSQL LIST partitioning keyed by a server-resolved security_domain_id (with tenant_id as a mandatory companion predicate). An access domain represents a single permission boundary, not merely a convenient grouping label. Private user memory and shared workspace/collection memory must not share the same ANN partition unless every member is authorized for every record in that partition. A caller allowed to multiple domains queries only those partitions and merges the resulting authorized candidate lists.
+
+Start with a self-hosted / single-customer trust boundary per deployment. A hosted shared multi-tenant control plane is explicitly deferred until partition lifecycle, tenant placement, RLS ownership and filtered ANN recall are load-tested. For high tenant or partition counts, benchmark PostgreSQL planning cost and consider dedicated databases/shards. Do not claim that arbitrary row-level ACLs are ANN-prefiltered merely because they appear in WHERE or RLS: when an ACL is finer than a physical security domain, use an exact filtered scan or move the records to a correctly isolated domain.
+
+HNSW is approximate. Use iterative scans where they improve the number of authorized results returned, and record filtered recall. Iterative scans improve candidate availability but are not a substitute for physical security-domain isolation.
 
 ## Retrieval design
 
-1. Resolve tenant/user/scope from verified server authentication context, not a caller-controlled query body.
-2. Build mandatory filter predicates: tenant, owner, collection membership, permitted scope, allowed memory states, and governance-approved trust levels.
-3. Apply filters in PostgreSQL and enable row-level security. Do not fetch global nearest neighbours and filter in Python afterward.
-4. Run dense ANN retrieval with cosine distance (or a benchmark-justified metric).
+1. Resolve tenant/user/collection authorization from verified server context, never from caller-controlled body fields.
+2. Resolve the exact set of authorized security_domain_id values before retrieval. Each physical ANN partition contains only records that share the same access boundary (for example one user's private memories or one shared workspace collection).
+3. Query only those partitions using a bound security_domain_id predicate. PostgreSQL partition pruning must select only authorized partitions; each partition has its own local HNSW index. Enable RLS as defence in depth and apply owner, status and trust predicates in SQL.
+4. If a request's ACL cannot be represented by the selected physical security domains, use an exact filtered scan over authorized rows or deny the request. Never fall back to a global ANN scan followed by application-side filtering.
+5. Run dense ANN retrieval with cosine distance (or a benchmark-justified metric) only inside the authorized partitions.
 5. Run lexical retrieval against a language-aware lexical index. Keep tokenizer choice explicit; Chinese and mixed-language recall must be evaluated rather than assuming English FTS behaviour is adequate.
 6. Optionally expand permitted related/superseding records.
 7. Fuse candidate ranks using reciprocal-rank fusion (RRF); rerank using explainable signals and optional cross-encoder only after authorization filtering.
 8. Pack results under the existing hard token and request budgets.
 9. Return score components, candidate IDs, active embedding profile, policy version and insufficient-context reason.
 
-Security invariant: no unauthorized record may be present in a candidate list, reranker input, prompt context, trace payload or response. If the repository cannot prove the required filter is applied, retrieval fails closed.
+Security invariant: no unauthorized record may be present in a candidate list, reranker input, prompt context, trace payload or response. pgvector documents that approximate-index WHERE filters are applied after the index scan and that vectors in a shared multitenant ANN index can affect other tenants' recall and speed. Therefore a shared global HNSW index plus RLS alone is not accepted as the isolation design. Partition pruning to authorized security domains is required before local ANN search; RLS remains defence in depth. The integration suite must inspect EXPLAIN plans and test both row isolation and partition pruning. If this cannot be proved, use exact filtered search or fail closed.
 
 ## Embedding provider contract
 
@@ -148,6 +159,8 @@ Positive:
 
 Costs:
 - PostgreSQL and pgvector become required production dependencies.
+- Security-domain partition management becomes an operational responsibility; partition creation, migration and cleanup require audited lifecycle jobs.
+- A shared global ANN index is not an accepted multitenant isolation design.
 - Embedding model and dimension changes require explicit re-indexing.
 - DB operations, schema migrations and backup drills become part of product ownership.
 - Chinese and multilingual lexical retrieval requires deliberate tokenizer design.
